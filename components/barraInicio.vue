@@ -17,7 +17,14 @@ const goTo = (id) => {
       <v-app-bar-nav-icon @click="drawer = !drawer" />
     </template>
 
-    <v-app-bar-title>Recuerdos Tecnologicos</v-app-bar-title>
+    <v-app-bar-title>Teckey</v-app-bar-title>
+     <template v-slot:append>
+    <v-btn icon="mdi-facebook"></v-btn>
+
+    <v-btn icon="mdi-whatsapp"></v-btn>
+
+    <v-btn icon="mdi-account"></v-btn>
+  </template>
   </v-app-bar>
 
     <v-navigation-drawer v-model="drawer" temporary color= "#5086c1" rounded>
