@@ -24,6 +24,5 @@ const slides = [
   '/imagenes/llavero.jpg' ,
   '/imagenes/momentos.jpg' ,
   '/imagenes/nfc.jpg' ,
- 
 ]
 </script>

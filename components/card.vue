@@ -54,6 +54,7 @@ defineProps({
 
   height: auto;
   min-height: 400px;
+  
   margin: 10px;
   margin-bottom: 20px;
   scroll-margin-top: 70px;
@@ -61,7 +62,7 @@ defineProps({
 
 .imagen-card {
   width: 100%;   /* ✅ ocupar todo el ancho */
-  height: 100%;  /* ✅ ocupar todo el alto */
+  height: auto;  /* ✅ ocupar todo el alto */
   object-fit: cover; /* ✅ recorta sin deformar */
 }
 
@@ -76,4 +77,5 @@ defineProps({
   color: #555;
   line-height: 1.6;
 }
+
 </style>
