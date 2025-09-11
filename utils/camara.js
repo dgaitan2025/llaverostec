@@ -1,6 +1,7 @@
 // utils/camara.js
 import { nextTick } from "vue"
 import { previewPhoto } from "./stickers"
+import {segmentarRostro} from "../utils/ApiRostro"
 
 let stream = null
 
@@ -34,6 +35,11 @@ export const abrirCamara = async (dialog, videoRef, fileInput) => {
   }
 }
 
+async function RecortarRostro() {
+  const datos = await segmentarRostro(previewPhoto.value)
+  return datos
+}
+
 export const tomarFoto = (videoRef, formData, cerrarFn) => {
   if (!videoRef.value) return
   const canvasTmp = document.createElement("canvas")
@@ -41,10 +47,19 @@ export const tomarFoto = (videoRef, formData, cerrarFn) => {
   canvasTmp.height = videoRef.value.videoHeight
   canvasTmp.getContext("2d").drawImage(videoRef.value, 0, 0)
   previewPhoto.value = canvasTmp.toDataURL("image/png")
-  formData.value.photoUser = previewPhoto.value
-  console.log("Base64 con prefijo:", previewPhoto.value)
-  localStorage.setItem("fotoUsuario", previewPhoto.value)
-  cerrarFn()
+  RecortarRostro().then(respuesta => {
+    if (respuesta?.rostro) {
+      previewPhoto.value = respuesta.rostro
+      formData.value.photoUser = previewPhoto.value
+      console.log("✅ Base64 con prefijo:", previewPhoto.value)
+
+      localStorage.setItem("fotoUsuario", previewPhoto.value)
+    } else {
+      console.error("❌ No se pudo segmentar rostro")
+    }
+
+    cerrarFn()
+  })
 }
 
 export const cerrarCamara = (dialog) => {
