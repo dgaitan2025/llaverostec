@@ -3,6 +3,8 @@ import { ref, onMounted, onBeforeUnmount, watch } from "vue"
 import { abrirCamara, cerrarCamara, tomarFoto, mostrarPreview } from "../utils/camara"
 import { initStickers, aplicarFiltro, previewPhoto, imageRef, canvasRef } from "../utils/stickers"
 import { useRouter } from 'vue-router'
+import { convertirABase64 } from "../utils/funciones.js"
+import dialogStatus from "../components/dialogStatus.vue"
 
 const router = useRouter()
 const props = defineProps({ modelValue: Boolean })
@@ -15,6 +17,11 @@ const dialog = ref(false)
 const videoRef = ref(null)
 const fileInput = ref(null)
 
+const dialogEvento = ref(false)
+const loadingEvento = ref(false)
+const dialogState = ref("")
+const dialogMessage = ref("")
+
 
 //Reglas para validar campos
 const rules = {
@@ -26,8 +33,9 @@ const rules = {
 
 //Al detectar cambios, ejecuta cambiar el filtro
 watch(filtrosActivos, async (nuevo) => {
-    const base64 = await aplicarFiltro(nuevo, formData)
-    formData.value.photoAvatar = base64
+
+    const blob = await aplicarFiltro(nuevo, formData)
+    formData.value.fotografia2 = blob
     console.log("foto filtro:", formData.photoAvatar)
 })
 
@@ -46,42 +54,46 @@ const onTomarFoto = () => {
 
 //Limpia el formulario al cerrar
 const resetForm = () => {
-    // Limpia los campos de texto y reglas
     form.value?.reset()
     form.value?.resetValidation()
 
-    // Limpia manualmente tu objeto formData
     Object.assign(formData.value, {
-        nombre: "",
         email: "",
-        phone: "",
-        birthdate: "",
+        telefono: "",
+        fechaNacimiento: "",
         nickname: "",
-        password: "",
-        photoUser: null,
-        photoAvatar: null,
-        notifications: []
+        passwordHash: "",
+        fotografia: "",
+        fotografiaMime: "",
+        fotografia2: "",
+        fotografia2Mime: "",
+        rolId: 4
+        //notifications: []
     })
 
-    // Limpia foto y filtros
     previewPhoto.value = null
     filtrosActivos.value = []
-
-    // Cierra el diálogo
     emit("update:modelValue", false)
 }
 
 // Datos del formulario
 const formData = ref({
-    nombre: "",
     email: "",
-    phone: "",
-    birthdate: "",
+    telefono: "",
+    fechaNacimiento: "", // formato YYYY-MM-DD
     nickname: "",
-    password: "",
-    photoUser: null,
-    photoAvatar: null,
-    notifications: []
+    passwordHash: "",
+    fotografia: "",       // si no mandas imagen, usa null
+    fotografiaMime: "",
+    fotografia2: "",
+    fotografia2Mime: "",
+    rolId: 4
+})
+
+const fromNoti = ref({
+    notifications: ""
+
+
 })
 
 //Inica los sticket y al tomar la foto se abre la vista previa
@@ -100,25 +112,71 @@ const guardarFoto = () => {
 
 //envia los campos al backend
 const submitForm = async () => {
-    if (!formData.value.photoUser || !formData.value.photoAvatar) {
-    alert("⚠️ Debe capturar una foto y aplicar un filtro antes de registrar")
+  // 🔹 Mostrar el diálogo en modo "procesando"
+  dialogEvento.value = true
+  loadingEvento.value = true
+  dialogState.value = ""
+  dialogMessage.value = ""
+
+  // 🔹 Validar que existan fotos
+
+
+  if (!formData.value.fotografia || !formData.value.fotografia2) {
+    loadingEvento.value = false
+    dialogState.value = "error"
+    dialogMessage.value = "⚠️ Debe capturar una foto y aplicar un filtro antes de registrar"
     return
   }
-    const { valid } = await form.value.validate()
-    if (!valid) {
-        return
+
+  // 🔹 Validación del formulario
+  const { valid } = await form.value.validate()
+  if (!valid) {
+    loadingEvento.value = false
+    dialogState.value = "error"
+    dialogMessage.value = "⚠️ Por favor corrige los errores del formulario"
+    return
+  }
+
+    const base64Foto = await convertirABase64(formData.value.fotografia)
+  formData.value.fotografia = base64Foto
+
+  const base64Foto2 = await convertirABase64(formData.value.fotografia2)
+  formData.value.fotografia2 = base64Foto2
+
+  try {
+    // 🔹 Enviar datos a la API
+    const response = await fetch("https://api-llaveros.onrender.com/api/usuarios/crear", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData.value)
+    })
+
+    const data = await response.json()
+    console.log("Respuesta API:", data)
+
+    if (response.ok) {
+      // ✅ Éxito
+      dialogState.value = "success"
+      dialogMessage.value = "Registro exitoso 🚀"
+      emit("update:modelValue", false)
+
+      // 👇 si quieres redirigir
+      // router.push('/usuario')
+    } else {
+      // ❌ Error de validación en API
+      dialogState.value = "error"
+      dialogMessage.value = data?.title || "❌ Error al registrar el usuario"
     }
-
-    setTimeout(() => {
-        loading.value = false
-        console.log("Datos:", formData.value)
-        alert("Registro exitoso 🚀")
-        emit("update:modelValue", false)
-
-        // 👇 redirección programática
-        router.push('/usuario')
-    }, 800)
+  } catch (error) {
+    console.error("Error creando usuario:", error)
+    dialogState.value = "error"
+    dialogMessage.value = "❌ Error de conexión con el servidor"
+  } finally {
+    // 🔹 Quitar el spinner
+    loadingEvento.value = false
+  }
 }
+
 
 //Valida que el nickname no exista
 const validarNickname = async (value) => {
@@ -147,19 +205,19 @@ const validarNickname = async (value) => {
             <v-card-text>
                 <v-form ref="form" v-model="valid" lazy-validation>
                     <!-- campos -->
-                    <v-text-field v-model="formData.nombre" label="Nombre" :rules="[rules.required]" required />
+                    <v-text-field v-model="formData.nickname" label="Nickname" :rules="[rules.required]" required />
                     <v-text-field v-model="formData.email" label="Correo" type="email"
                         :rules="[rules.required, rules.email]" required />
-                    <v-text-field v-model="formData.phone" label="Teléfono" type="tel" :rules="[rules.required]"
+                    <v-text-field v-model="formData.telefono" label="Teléfono" type="tel" :rules="[rules.required]"
                         required />
-                    <v-text-field v-model="formData.birthdate" label="Fecha nacimiento" type="date"
+                    <v-text-field v-model="formData.fechaNacimiento" label="Fecha nacimiento" type="date"
                         :rules="[rules.required]" required />
-                    <v-text-field v-model="formData.nickname" label="Nickname" :rules="[rules.required]" required />
-                    <v-text-field v-model="formData.password" label="Contraseña" type="password"
+
+                    <v-text-field v-model="formData.passwordHash" label="Contraseña" type="password"
                         :rules="[rules.required]" required />
 
                     <!-- ComboBox validado -->
-                    <v-combobox v-model="formData.notifications" label="Notificaciones" :items="['Correo', 'WhatsApp']"
+                    <v-combobox v-model="fromNoti.notifications" label="Notificaciones" :items="['Correo', 'WhatsApp']"
                         multiple chips :rules="[rules.combo]" required />
 
                     <!-- Fotografía -->
@@ -204,4 +262,12 @@ const validarNickname = async (value) => {
             </v-card-actions>
         </v-card>
     </v-dialog>
+
+    <dialogStatus
+  v-model="dialogEvento"
+  :loading="loadingEvento"
+  :state="dialogState"
+  :message="dialogMessage"
+  :auto-close="3000"
+/>
 </template>

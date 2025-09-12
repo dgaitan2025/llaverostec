@@ -20,6 +20,7 @@
           :prepend-icon="item.icon"
           :title="item.title"
           :value="item.value"
+          @click="$emit('item-click', item)"
         />
       </v-list>
     </v-navigation-drawer>

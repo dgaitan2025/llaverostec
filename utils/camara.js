@@ -1,7 +1,7 @@
 // utils/camara.js
 import { nextTick } from "vue"
 import { previewPhoto } from "./stickers"
-import {segmentarRostro} from "../utils/ApiRostro"
+import { segmentarRostro } from "../utils/ApiRostro"
 
 let stream = null
 
@@ -9,7 +9,7 @@ let stream = null
 export const abrirCamara = async (dialog, videoRef, fileInput) => {
   try {
     console.log("👉 dialog recibido:", dialog)
-  console.log("👉 esRef?", dialog && typeof dialog === "object" && "value" in dialog)
+    console.log("👉 esRef?", dialog && typeof dialog === "object" && "value" in dialog)
     const s = await navigator.mediaDevices.getUserMedia({ video: true })
     console.log("pasa1")
     stream = s
@@ -40,13 +40,17 @@ async function RecortarRostro() {
   return datos
 }
 
-export const tomarFoto = (videoRef, formData, cerrarFn) => {
+export const tomarFoto = async (videoRef, formData, cerrarFn) => {
   if (!videoRef.value) return
   const canvasTmp = document.createElement("canvas")
   canvasTmp.width = videoRef.value.videoWidth
   canvasTmp.height = videoRef.value.videoHeight
   canvasTmp.getContext("2d").drawImage(videoRef.value, 0, 0)
   previewPhoto.value = canvasTmp.toDataURL("image/png")
+  console.log("✅ Base64 con prefijo:", previewPhoto.value)
+
+  //Recorte de rostro
+ /* 
   RecortarRostro().then(respuesta => {
     if (respuesta?.rostro) {
       previewPhoto.value = respuesta.rostro
@@ -60,6 +64,21 @@ export const tomarFoto = (videoRef, formData, cerrarFn) => {
 
     cerrarFn()
   })
+*/
+  //Sin recorte de rostro
+
+  if (previewPhoto.value) {
+  // Asegúrate que sea Blob (canvas.toBlob ya te lo da así)
+  const file1 = new File([previewPhoto.value], "foto.png", {
+    type: "image/png",
+  })
+  formData.value.fotografia = file1
+  
+} 
+  console.log("Base64 con prefijo:", previewPhoto.value) 
+  localStorage.setItem("fotoUsuario", previewPhoto.value)
+  cerrarFn()
+
 }
 
 export const cerrarCamara = (dialog) => {

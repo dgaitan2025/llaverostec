@@ -12,8 +12,9 @@
                         <div class="text-subtitle-1 text-medium-emphasis mb-2">Usuario</div>
 
                         <!-- Email -->
-                        <v-text-field v-model="formData.usuario" density="compact" placeholder="Nombre de usuario"
-                            prepend-inner-icon="mdi-account" variant="outlined" :rules="[rules.required]" required />
+                        <v-text-field ref="usuarioField" v-model="formData.usuario" density="compact"
+                            placeholder="Nombre de usuario" prepend-inner-icon="mdi-account" variant="outlined"
+                            :rules="[rules.required]" required />
 
                         <!-- Password -->
                         <div
@@ -30,7 +31,11 @@
                             :type="visible ? 'text' : 'password'" density="compact" placeholder="Ingrese contraseña"
                             prepend-inner-icon="mdi-lock-outline" variant="outlined" :rules="[rules.required]" required
                             @click:append-inner="visible = !visible" />
-
+                        <div class="d-flex justify-center my-4">
+                            <v-btn icon size="s-large" class="d-flex justify-center align-center" @click="faceID">
+                                <v-icon size="48" color="indigo-lighten-1">mdi-face-recognition</v-icon>
+                            </v-btn>
+                        </div>
                         <!-- Botón login -->
                         <v-btn class="mb-6" color="blue" size="large" variant="tonal" block @click="submitForm">
                             Ingresar
@@ -55,14 +60,26 @@
             <PiePagina />
         </client-only>
     </v-container>
+    <dialogStatus v-model="dialogEvento" :loading="loadingEvento" :state="dialogState" :message="dialogMessage"
+        :auto-close="3000" />
 </template>
 
 <script setup>
+const usuarioField = ref(null)
 import { ref } from "vue"
 import PiePagina from "../components/piePagina.vue"
 import RecuperarDialog from "../components/recuperarclave.vue"
 import RegistroDialog from "../components/FromRegistro.vue"
 import { useRouter } from "vue-router"
+import dialogStatus from "../components/dialogStatus.vue"
+
+const dialogEvento = ref(false)
+const loadingEvento = ref(false)
+const dialogState = ref("")
+const dialogMessage = ref("")
+const loading = ref(false)
+const usuarioLogueado = ref(null)
+const errorMsg = ref("")
 
 const router = useRouter()
 const showRecuperar = ref(false)
@@ -71,8 +88,11 @@ const visible = ref(false)
 
 const formData = ref({
     usuario: "",
-    password: ""
+    password: "",
+    photo: ""
 })
+
+
 
 const rules = {
     required: v => !!v || "Este campo es obligatorio",
@@ -81,16 +101,75 @@ const rules = {
 
 const valid = ref(false)
 const form = ref(null)
+
+const faceID = async () => {
+
+
+    const errors = await usuarioField.value.validate() // 👉 []
+    if (errors.length > 0) {
+        console.log("❌ Error:", errors[0])
+        return
+    }
+
+    console.log("✅ Usuario válido:", formData.value.usuario)
+    router.push("/usuario")
+
+
+    console.log("Validación correcta, procesando...")
+
+    setTimeout(() => {
+        console.log("✅ Datos:", formData.value)
+        router.push("/usuario")
+    }, 800)
+}
+
 const submitForm = async () => {
     await form.value.validate()
     if (!formData.value.usuario || !formData.value.password) {
         return
     }
 
-    setTimeout(() => {
-        console.log("✅ Datos:", formData.value)
+    dialogEvento.value = true
+    loadingEvento.value = true
+    dialogState.value = ""
+    dialogMessage.value = ""
 
-        router.push("/usuario")
-    }, 800)
+
+    try {
+        const response = await fetch("https://api-llaveros.onrender.com/api/usuarios/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData.value)
+        })
+
+        const data = await response.json()
+        console.log("Respuesta API:", data)
+
+        if (response.ok && data.success) {
+            usuarioLogueado.value = data.usuario
+            localStorage.setItem("usuario", JSON.stringify(data.usuario))
+
+            // ✅ Actualiza el diálogo
+            loadingEvento.value = false
+            dialogState.value = "success"
+            dialogMessage.value = "Bienvenido " + data.usuario.nickname
+
+            // Redirección opcional
+            router.push("/usuario")
+        } else {
+            // ❌ Error de credenciales
+            loadingEvento.value = false
+            dialogState.value = "error"
+            dialogMessage.value = data.message || "Error al iniciar sesión"
+        }
+    } catch (err) {
+        // ❌ Error de red
+        loadingEvento.value = false
+        dialogState.value = "error"
+        dialogMessage.value = "Error de conexión con el servidor"
+        console.error(err)
+    } finally {
+        loading.value = false
+    }
 }
 </script>
