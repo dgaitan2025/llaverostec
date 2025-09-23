@@ -72,6 +72,7 @@ import RecuperarDialog from "../components/recuperarclave.vue"
 import RegistroDialog from "../components/FromRegistro.vue"
 import { useRouter } from "vue-router"
 import dialogStatus from "../components/dialogStatus.vue"
+import { nextTick } from "vue"
 
 const dialogEvento = ref(false)
 const loadingEvento = ref(false)
@@ -145,17 +146,25 @@ const submitForm = async () => {
         const data = await response.json()
         console.log("Respuesta API:", data)
 
-        if (response.ok && data.success) {
-            usuarioLogueado.value = data.usuario
-            localStorage.setItem("usuario", JSON.stringify(data.usuario))
 
-            // ✅ Actualiza el diálogo
+        if (response.ok && data.success) {
+            localStorage.setItem("usuario", JSON.stringify(data.usuario))
+            const usuario = useCookie("usuario")
+            usuario.value = JSON.stringify({ nickname: data.message })
             loadingEvento.value = false
             dialogState.value = "success"
             dialogMessage.value = "Bienvenido " + data.usuario.nickname
 
-            // Redirección opcional
-            router.push("/usuario")
+            // Redirigir según el rol
+            if (data.usuario.id === 4) {
+                router.push("/usuario")
+            } else if (data.usuario.id === 5) {
+                router.push("/operador")
+            } else {
+                navigateTo('/') // fallback
+            }
+
+            
         } else {
             // ❌ Error de credenciales
             loadingEvento.value = false

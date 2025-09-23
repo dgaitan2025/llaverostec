@@ -47,6 +47,7 @@ import PiePagina from "../components/piePagina.vue"
 import { ref, onMounted } from "vue"
 import { useRouter } from "vue-router"
 
+
 const router = useRouter()
 const dialogFoto = ref(false)
 
@@ -76,6 +77,8 @@ onMounted(() => {
 
 const handleMenuClick = (item) => {
   if (item.value === "exit") {
+    const sesion = useCookie("usuario")
+    sesion.value = null   // 👈 limpia cookie
     localStorage.removeItem("usuario")   // limpia sesión
     router.push("/login")                // redirige al login
   } else {
