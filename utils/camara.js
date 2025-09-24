@@ -72,7 +72,7 @@ export const tomarFoto = async (videoRef, formData, cerrarFn) => {
   const file1 = new File([previewPhoto.value], "foto.png", {
     type: "image/png",
   })
-  formData.value.fotografia = file1
+  formData.value.fotografia = previewPhoto.value
   
 } 
   console.log("Base64 con prefijo:", previewPhoto.value) 

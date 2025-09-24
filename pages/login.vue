@@ -6,7 +6,7 @@
                 <NuxtLink to="/" class="d-flex justify-center">
                     <v-img class="mx-auto my-6" max-width="60" src="/imagenes/Logo.jpg" />
                 </NuxtLink>
-                <v-form ref="form" v-model="valid" lazy-validation>
+                <v-form ref="form" v-model="valid" lazy-validation @submit.prevent="submitForm">
                     <!-- Card de login -->
                     <v-card class="mx-auto pa-6 pa-sm-8" elevation="8" rounded="lg">
                         <div class="text-subtitle-1 text-medium-emphasis mb-2">Usuario</div>
@@ -37,7 +37,7 @@
                             </v-btn>
                         </div>
                         <!-- Botón login -->
-                        <v-btn class="mb-6" color="blue" size="large" variant="tonal" block @click="submitForm">
+                        <v-btn class="mb-6" color="blue" size="large" variant="tonal" block type="submit">
                             Ingresar
                         </v-btn>
 
