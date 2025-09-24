@@ -12,7 +12,7 @@
 
     <div v-if="mostrarFormulario" class="pa-6 text-center">
       <!-- Selector de tipo de dato -->
-      <v-select v-model="formDataNFC.tipoNFC" :items="['Texto', 'URL', 'vCard']" label="Selecciona qué grabar en NFC" />
+      <v-select v-model="formDataNFC.tipoNFC" :items="['Texto', 'URL', 'Contacto']" label="Selecciona qué grabar en NFC" />
       
       <!-- Campos condicionales -->
       <div v-if="formDataNFC.tipoNFC === 'Texto'">
@@ -23,7 +23,7 @@
         <v-text-field v-model="formDataNFC.textUrl" label="Ingresa la URL" type="url"></v-text-field>
       </div>
 
-      <div v-else-if="formDataNFC.tipoNFC === 'vCard'">
+      <div v-else-if="formDataNFC.tipoNFC === 'Contacto'">
         <v-text-field v-model="formDataNFC.nombre" label="Nombre"></v-text-field>
         <v-text-field v-model="formDataNFC.telefono" label="Telefono"></v-text-field>
       </div>
@@ -213,7 +213,7 @@ async function escribir() {
   else if (tipoDato.value === "URL") {
     record = { recordType: "url", data: mensaje.value }
   }
-  else if (tipoDato.value === "vCard") {
+  else if (tipoDato.value === "Contacto") {
     // vCard básico (puedes personalizarlo con más campos)
     const vcard = `BEGIN:VCARD
       VERSION:3.0

@@ -12,8 +12,8 @@
 
     <div v-if="mostrarFormulario" class="pa-6 text-center">
       <!-- Selector de tipo de dato -->
-      <v-select v-model="formDataNFC.tipoNFC" :items="['Texto', 'URL', 'vCard']" label="Selecciona qué grabar en NFC" />
-      
+      <v-select v-model="formDataNFC.tipoNFC" :items="['Texto', 'URL', 'Contacto']" label="Selecciona qué grabar en NFC" />
+
       <!-- Campos condicionales -->
       <div v-if="formDataNFC.tipoNFC === 'Texto'">
         <v-textarea v-model="formDataNFC.textUrl" label="Escribe el texto a grabar" auto-grow></v-textarea>
@@ -23,7 +23,7 @@
         <v-text-field v-model="formDataNFC.textUrl" label="Ingresa la URL" type="url"></v-text-field>
       </div>
 
-      <div v-else-if="formDataNFC.tipoNFC === 'vCard'">
+      <div v-else-if="formDataNFC.tipoNFC === 'Contacto'">
         <v-text-field v-model="formDataNFC.nombre" label="Nombre"></v-text-field>
         <v-text-field v-model="formDataNFC.telefono" label="Telefono"></v-text-field>
       </div>
@@ -39,7 +39,7 @@
             <video ref="videoRef" autoplay playsinline style="width:100%; border-radius:8px;" />
           </v-card-text>
           <v-card-actions>
-            <v-btn color="green" @click="onTomarFoto" >Capturar</v-btn>
+            <v-btn color="green" @click="onTomarFoto">Capturar</v-btn>
             <v-btn color="red" @click="onCerrarCamara">Cancelar</v-btn>
           </v-card-actions>
         </v-card>
@@ -48,7 +48,7 @@
 
       <div v-if="previewPhoto" class="pa-6 text-center">
         <v-img :src="previewPhoto" max-width="300" class="mx-auto rounded" alt="Vista previa" />
-        
+
       </div>
       <v-btn color="primary" @click="escribir">Grabar NFC</v-btn>
     </div>
@@ -98,16 +98,16 @@ onMounted(() => {
 
 //Formulario de NFC
 const formDataNFC = ref({
-  tipoNFC:"",
-  textUrl:"",
-  nombre:"",
-  telefono:"",
+  tipoNFC: "",
+  textUrl: "",
+  nombre: "",
+  telefono: "",
   fotografia: "",
 })
 
 const guardarNFC = () => {
-    try {
-      formDataNFC.value.fotografia = previewPhoto.value
+  try {
+    formDataNFC.value.fotografia = previewPhoto.value
     // 1️⃣ Guardar en localStorage
     localStorage.setItem("formDataNFC", JSON.stringify(formDataNFC.value))
     alert("✅ Datos guardados en localStorage")
@@ -158,7 +158,7 @@ const onTomarFoto = () => {
   tomarFoto(videoRef, formDataNFC, () => {
     cerrarCamara(dialog)
     previewPhoto.value = formDataNFC.value.fotografia  // ✅ usar lo que ya guardó
-    console.log("foto a ver "+  previewPhoto.value)
+    console.log("foto a ver " + previewPhoto.value)
   })
 }
 
@@ -224,14 +224,18 @@ async function escribir() {
   else if (formDataNFC.value.tipoNFC === "URL") {
     record = { recordType: "url", data: formDataNFC.value.textUrl }
   }
-  else if (formDataNFC.value.tipoNFC === "vCard") {
-    // vCard básico (puedes personalizarlo con más campos)
-    const vcard = `BEGIN:VCARD
-      VERSION:3.0
-      FN:${formDataNFC.value.nombre}
-      TEL:${formDataNFC.value.telefono}
-      END:VCARD`
-    record = { recordType: "mime", mediaType: "text/vcard", data: vcard }
+  else if (formDataNFC.value.tipoNFC === "Contacto") {
+    const vcard = `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${formDataNFC.value.nombre}\r\nTEL:${formDataNFC.value.telefono}\r\nEND:VCARD`;
+
+    // Convertir string a bytes (UTF-8)
+    const encoder = new TextEncoder();
+    const vcardBytes = encoder.encode(vcard);
+
+    record = {
+      recordType: "mime",
+      mediaType: "text/vcard",
+      data: vcardBytes  // ✅ ahora es Uint8Array
+    }
   }
 
   try {
