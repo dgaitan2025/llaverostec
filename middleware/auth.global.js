@@ -1,5 +1,5 @@
 export default defineNuxtRouteMiddleware((to) => {
-  const usuario = useCookie("usuario")
+  const usuario = useCookie("token")
 
   if (to.path === '/usuario' && !usuario.value) {
     console.log("ingreso al false")

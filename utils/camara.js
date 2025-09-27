@@ -3,6 +3,7 @@ import { nextTick } from "vue"
 import { previewPhoto } from "./stickers"
 import { segmentarRostro } from "../utils/ApiRostro"
 
+
 let stream = null
 
 
@@ -36,7 +37,9 @@ export const abrirCamara = async (dialog, videoRef, fileInput) => {
 }
 
 async function RecortarRostro() {
-  const datos = await segmentarRostro(previewPhoto.value)
+  const soloBase64 = previewPhoto.value.split(",")[1]
+  const datos = await segmentarRostro(soloBase64)
+  
   return datos
 }
 
@@ -48,38 +51,43 @@ export const tomarFoto = async (videoRef, formData, cerrarFn) => {
   canvasTmp.getContext("2d").drawImage(videoRef.value, 0, 0)
   previewPhoto.value = canvasTmp.toDataURL("image/png")
   console.log("✅ Base64 con prefijo:", previewPhoto.value)
-
+  formData.value.FotografiaBase64 = previewPhoto.value.split(",")[1];
   //Recorte de rostro
- /* 
+ 
   RecortarRostro().then(respuesta => {
-    if (respuesta?.rostro) {
-      previewPhoto.value = respuesta.rostro
-      formData.value.photoUser = previewPhoto.value
+    console.log("Respuesta " , respuesta)
+    if (respuesta.resultado) {
+      previewPhoto.value = "data:image/png;base64,"+respuesta.rostro
+      //formData.value.FotografiaBase64 = previewPhoto.value
+      
       console.log("✅ Base64 con prefijo:", previewPhoto.value)
 
-      localStorage.setItem("fotoUsuario", previewPhoto.value)
     } else {
       console.error("❌ No se pudo segmentar rostro")
     }
 
-    cerrarFn()
+    //cerrarFn()
   })
-*/
-  //Sin recorte de rostro
 
+  //Sin recorte de rostro
+/*
   if (previewPhoto.value) {
   // Asegúrate que sea Blob (canvas.toBlob ya te lo da así)
   const file1 = new File([previewPhoto.value], "foto.png", {
     type: "image/png",
   })
-  formData.value.fotografia = previewPhoto.value
+  formData.value.FotografiaBase64 = previewPhoto.value.split(",")[1];
   
 } 
-  console.log("Base64 con prefijo:", previewPhoto.value) 
+
+*/
+  console.log("Base64 SIN prefijo:", formData.value.FotografiaBase64) 
   localStorage.setItem("fotoUsuario", previewPhoto.value)
   cerrarFn()
 
 }
+
+
 
 export const cerrarCamara = (dialog) => {
   if (stream) {

@@ -69,8 +69,10 @@ export const aplicarFiltro = async (filtrosSeleccionados = []) => {
         .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }))
         .withFaceLandmarks()
     if (!det) {
+
         alert("❌ No se detectó ningún rostro en la foto")
-        return
+        previewPhoto.value = null
+        return null
     }
 
     const lm = det.landmarks
@@ -126,7 +128,8 @@ export const aplicarFiltro = async (filtrosSeleccionados = []) => {
         drawCenteredRotated(ctx, sticker, posX, posY, targetW, targetH, angle)
     }
 
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"))
-    return blob
+    const base64 = canvas.toDataURL("image/png");
+    const soloBase64 = base64.split(",")[1]; // 👈 elimina "data:image/png;base64,"
+    return soloBase64;
 }
 

@@ -12,7 +12,7 @@
                         <div class="text-subtitle-1 text-medium-emphasis mb-2">Usuario</div>
 
                         <!-- Email -->
-                        <v-text-field ref="usuarioField" v-model="formData.usuario" density="compact"
+                        <v-text-field ref="usuarioField" v-model="formData.Identificador" density="compact"
                             placeholder="Nombre de usuario" prepend-inner-icon="mdi-account" variant="outlined"
                             :rules="[rules.required]" required />
 
@@ -26,15 +26,31 @@
                             </a>
                         </div>
 
-                        <v-text-field v-model="formData.password"
+                        <v-text-field v-model="formData.Password"
                             :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
                             :type="visible ? 'text' : 'password'" density="compact" placeholder="Ingrese contraseña"
                             prepend-inner-icon="mdi-lock-outline" variant="outlined" :rules="[rules.required]" required
                             @click:append-inner="visible = !visible" />
                         <div class="d-flex justify-center my-4">
-                            <v-btn icon size="s-large" class="d-flex justify-center align-center" @click="faceID">
+                            <v-btn icon size="s-large" class="d-flex justify-center align-center"
+                                @click="onAbrirCamara">
                                 <v-icon size="48" color="indigo-lighten-1">mdi-face-recognition</v-icon>
                             </v-btn>
+
+                            <v-dialog v-model="dialog" max-width="600">
+                                <v-card>
+                                    <v-card-title>Tomar Foto</v-card-title>
+                                    <v-card-text>
+                                        <video ref="videoRef" autoplay playsinline
+                                            style="width:100%; border-radius:8px;" />
+                                    </v-card-text>
+                                    <v-card-actions>
+                                        <v-btn color="green" @click="onTomarFoto">Capturar</v-btn>
+                                        <v-btn color="red" @click="onCerrarCamara">Cancelar</v-btn>
+                                    </v-card-actions>
+                                </v-card>
+                            </v-dialog>
+
                         </div>
                         <!-- Botón login -->
                         <v-btn class="mb-6" color="blue" size="large" variant="tonal" block type="submit">
@@ -72,7 +88,9 @@ import RecuperarDialog from "../components/recuperarclave.vue"
 import RegistroDialog from "../components/FromRegistro.vue"
 import { useRouter } from "vue-router"
 import dialogStatus from "../components/dialogStatus.vue"
-import { nextTick } from "vue"
+import {UrlWithApiRD, UrlWithApiDG, ENDPOINTS} from "../Service/apiConfig"
+import { VerificarRostro } from "../utils/ApiRostro"
+import { abrirCamara, cerrarCamara, tomarFoto, mostrarPreview } from "../utils/camara"
 
 const dialogEvento = ref(false)
 const loadingEvento = ref(false)
@@ -88,9 +106,9 @@ const showRegistrar = ref(false)
 const visible = ref(false)
 
 const formData = ref({
-    usuario: "",
-    password: "",
-    photo: ""
+    Identificador: "",
+    Password: "",
+    FotografiaBase64: ""
 })
 
 
@@ -112,7 +130,7 @@ const faceID = async () => {
         return
     }
 
-    console.log("✅ Usuario válido:", formData.value.usuario)
+    console.log("✅ Usuario válido:", formData.value.Identificador)
     router.push("/usuario")
 
 
@@ -126,7 +144,7 @@ const faceID = async () => {
 
 const submitForm = async () => {
     await form.value.validate()
-    if (!formData.value.usuario || !formData.value.password) {
+    if (!formData.value.Identificador || !formData.value.Password) {
         return
     }
 
@@ -137,7 +155,7 @@ const submitForm = async () => {
 
 
     try {
-        const response = await fetch("https://api-llaveros.onrender.com/api/usuarios/login", {
+        const response = await fetch(UrlWithApiRD(ENDPOINTS.login), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(formData.value)
@@ -148,17 +166,17 @@ const submitForm = async () => {
 
 
         if (response.ok && data.success) {
-            localStorage.setItem("usuario", JSON.stringify(data.usuario))
-            const usuario = useCookie("usuario")
-            usuario.value = JSON.stringify({ nickname: data.message })
+            localStorage.setItem("usuario", JSON.stringify(data))
+            const token = useCookie("token")
+            token.value = JSON.stringify({ nickname: data.token })
             loadingEvento.value = false
             dialogState.value = "success"
-            dialogMessage.value = "Bienvenido " + data.usuario.nickname
+            dialogMessage.value = "Bienvenido " + data.nickname
 
             // Redirigir según el rol
-            if (data.usuario.id === 4) {
+            if (data.rolId === 4) {
                 router.push("/usuario")
-            } else if (data.usuario.id === 5) {
+            } else if (data.rolId  === 5) {
                 router.push("/operador")
             } else {
                 navigateTo('/') // fallback
@@ -175,10 +193,101 @@ const submitForm = async () => {
         // ❌ Error de red
         loadingEvento.value = false
         dialogState.value = "error"
+        dialogMessage.value = err.message.includes("Credenciales") 
+        ? err.message 
+        : "Error de conexión con el servidor"
+    console.error(err)
+    } finally {
+        loading.value = false
+    }
+}
+
+// Reconocimiento facial 
+
+const dialog = ref(false)
+const fileInput = ref(null)
+const videoRef = ref(null)
+const onAbrirCamara = async () => {
+    await form.value.validate()
+    if (!formData.value.Identificador) {
+        return
+    }
+    abrirCamara(dialog, videoRef, fileInput)
+}
+
+const onCerrarCamara = () => {
+    cerrarCamara(dialog)
+}
+
+async function Verificar() {
+
+    console.log("Foto 1", formData.value.FotografiaBase64)
+    console.log("Foto 2", usuarioLogueado.value.fotografia)
+    const datos = await VerificarRostro(formData.value.FotografiaBase64, usuarioLogueado.value.fotografia)
+    return datos
+}
+
+const onTomarFoto = async () => {
+    tomarFoto(videoRef, formData, () => cerrarCamara(dialog))
+
+    dialogEvento.value = true
+    loadingEvento.value = true
+    dialogState.value = ""
+    dialogMessage.value = ""
+
+
+    try {
+        const response = await fetch(
+            `https://api-llaveros.onrender.com/api/usuarios/by-nickname/${formData.value.Identificador}`,
+            {
+                method: "GET",
+                headers: { "Content-Type": "application/json" }
+            }
+        )
+
+        const data = await response.json()
+        console.log("Respuesta API:", data)
+
+        if (response.ok && data.success) {
+            usuarioLogueado.value = data.usuario
+            localStorage.setItem("usuario", JSON.stringify(data.usuario))
+
+
+            
+        } else {
+            loadingEvento.value = false
+            dialogState.value = "error"
+            dialogMessage.value = data.message || "Error en la autenticación"
+        }
+    } catch (err) {
+        loadingEvento.value = false
+        dialogState.value = "error"
         dialogMessage.value = "Error de conexión con el servidor"
         console.error(err)
     } finally {
         loading.value = false
     }
+
+
+
+    Verificar().then(respuesta => {
+        console.log("👉 Respuesta API rostro:", respuesta)
+
+        if (respuesta?.coincide) {
+            
+            loadingEvento.value = false
+            dialogState.value = "success"
+            dialogMessage.value = "Bienvenido" 
+
+            router.push("/usuario")
+        } else {
+            console.error("❌ No se pudo verificar rostro")
+             loadingEvento.value = false
+            dialogState.value = "error"
+            dialogMessage.value = "Error en la autenticación"
+        }
+
+       
+    })
 }
 </script>

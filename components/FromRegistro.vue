@@ -5,6 +5,8 @@ import { initStickers, aplicarFiltro, previewPhoto, imageRef, canvasRef } from "
 import { useRouter } from 'vue-router'
 import { convertirABase64 } from "../utils/funciones.js"
 import dialogStatus from "../components/dialogStatus.vue"
+import {UrlWithApiRD, UrlWithApiDG, ENDPOINTS} from "../Service/apiConfig"
+import { toRaw } from "vue"
 
 const router = useRouter()
 const props = defineProps({ modelValue: Boolean })
@@ -31,18 +33,22 @@ const rules = {
     avatar: v => !!v || "Debe capturar o subir una foto"
 }
 
+const onAbrirCamara = () => {
+    abrirCamara(dialog, videoRef, fileInput)
+}
+
 //Al detectar cambios, ejecuta cambiar el filtro
 watch(filtrosActivos, async (nuevo) => {
 
     const blob = await aplicarFiltro(nuevo, formData)
-    formData.value.fotografia2 = blob
-    console.log("foto filtro:", formData.photoAvatar)
+
+
+    formData.value.Fotografia2Base64 = blob
+    console.log("foto filtro:", formData.value.Fotografia2Base64)
 })
 
 //Opciones de camara
-const onAbrirCamara = () => {
-    abrirCamara(dialog, videoRef, fileInput)
-}
+
 
 const onCerrarCamara = () => {
     cerrarCamara(dialog)
@@ -58,16 +64,17 @@ const resetForm = () => {
     form.value?.resetValidation()
 
     Object.assign(formData.value, {
-        email: "",
-        telefono: "",
-        fechaNacimiento: "",
-        nickname: "",
-        passwordHash: "",
-        fotografia: "",
+        Email: "",
+        Nickname: "",
+        PasswordPlano: "",
+        Telefono: "",
+        FechaNacimiento: "",
+        RolId: 4,
+        FotografiaBase64: "",
         fotografiaMime: "",
-        fotografia2: "",
-        fotografia2Mime: "",
-        rolId: 4
+        Fotografia2Base64: "",
+        Fotografia2Mime: "image/png"
+        
         //notifications: []
     })
 
@@ -78,16 +85,17 @@ const resetForm = () => {
 
 // Datos del formulario
 const formData = ref({
-    email: "",
-    telefono: "",
-    fechaNacimiento: "", // formato YYYY-MM-DD
-    nickname: "",
-    passwordHash: "",
-    fotografia: "",       // si no mandas imagen, usa null
-    fotografiaMime: "",
-    fotografia2: "",
-    fotografia2Mime: "",
-    rolId: 4
+    Email: "",
+    Nickname:"",
+    PasswordPlano: "",
+    Telefono: "",
+    FechaNacimiento: "", // formato YYYY-MM-DD
+    RolId: 4,
+    FotografiaBase64: "",       // si no mandas imagen, usa null
+    FotografiaMime: "image/png",
+    Fotografia2Base64: "",
+    Fotografia2Mime: "image/png"
+    
 })
 
 const fromNoti = ref({
@@ -121,7 +129,7 @@ const submitForm = async () => {
   // 🔹 Validar que existan fotos
 
 
-  if (!formData.value.fotografia || !formData.value.fotografia2) {
+  if (!formData.value.FotografiaBase64 || !formData.value.Fotografia2Base64) {
     loadingEvento.value = false
     dialogState.value = "error"
     dialogMessage.value = "⚠️ Debe capturar una foto y aplicar un filtro antes de registrar"
@@ -137,15 +145,20 @@ const submitForm = async () => {
     return
   }
 
-    const base64Foto = await convertirABase64(formData.value.fotografia)
-  formData.value.fotografia = base64Foto
+  /*
+    const base64Foto = await convertirABase64(formData.value.FotografiaBase64)
+  formData.value.FotografiaBase64 = base64Foto
 
-  const base64Foto2 = await convertirABase64(formData.value.fotografia2)
-  formData.value.fotografia2 = base64Foto2
+  const base64Foto2 = await convertirABase64(formData.value.Fotografia2Base64)
+  formData.value.Fotografia2Base64 = base64Foto2
+*/
 
+const payload = toRaw(formData.value)
+
+console.log("Payload:", JSON.stringify(payload))
   try {
     // 🔹 Enviar datos a la API
-    const response = await fetch("https://api-llaveros.onrender.com/api/usuarios/crear", {
+    const response = await fetch(UrlWithApiRD(ENDPOINTS.registro), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData.value)
@@ -205,15 +218,15 @@ const validarNickname = async (value) => {
             <v-card-text>
                 <v-form ref="form" v-model="valid" lazy-validation>
                     <!-- campos -->
-                    <v-text-field v-model="formData.nickname" label="Nickname" :rules="[rules.required]" required />
-                    <v-text-field v-model="formData.email" label="Correo" type="email"
+                    <v-text-field v-model="formData.Nickname" label="Nickname" :rules="[rules.required]" required />
+                    <v-text-field v-model="formData.Email" label="Correo" type="email"
                         :rules="[rules.required, rules.email]" required />
-                    <v-text-field v-model="formData.telefono" label="Teléfono" type="tel" :rules="[rules.required]"
+                    <v-text-field v-model="formData.Telefono" label="Teléfono" type="tel" :rules="[rules.required]"
                         required />
-                    <v-text-field v-model="formData.fechaNacimiento" label="Fecha nacimiento" type="date"
+                    <v-text-field v-model="formData.FechaNacimiento" label="Fecha nacimiento" type="date"
                         :rules="[rules.required]" required />
 
-                    <v-text-field v-model="formData.passwordHash" label="Contraseña" type="password"
+                    <v-text-field v-model="formData.PasswordPlano" label="Contraseña" type="password"
                         :rules="[rules.required]" required />
 
                     <!-- ComboBox validado -->
