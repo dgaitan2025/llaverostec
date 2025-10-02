@@ -1,5 +1,5 @@
 // DOminio
-export const API_RD = "https://api-llavero-rd.onrender.com"; //RD"http://pruebas.somee.com/"//
+export const API_RD = "https://localhost:7291"//"https://apitect.somee.com"; //RD"http://pruebas.somee.com/"//
 const API_DG = "https://api-llaveros.onrender.com"; //DG
 const API_biometrica = "http://www.server.daossystem.pro:3406"
 
@@ -13,6 +13,7 @@ export const ENDPOINTS = {
   //Ricardo
   login:"/api/Auth/login",
   registro: "/api/Usuarios",
+  loginFace:"/api/Auth/login-face",
 
   //Biometria
   segmentar: "/api/Rostro/Segmentar",

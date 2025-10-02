@@ -1,7 +1,7 @@
 <template>
   <Sidebar v-if="usuario && usuario.fotografia2" :foto="usuario.fotografia2" :title="usuario.nickname" :subtitle="usuario.email" :items="menuItems"
     @item-click="handleMenuClick">
-    <div class="pa-6 text-center">
+    <div class="pa-6 text-center"> 
       <!-- Foto clickeable -->
       <v-avatar size="80" class="cursor-pointer" @click="dialogFoto = true">
         <v-img :src="usuario.fotografia2" alt="Foto de usuario" />

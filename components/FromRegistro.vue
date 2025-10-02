@@ -1,14 +1,12 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from "vue"
+import { ref, onMounted, watch } from "vue"
 import { abrirCamara, cerrarCamara, tomarFoto, mostrarPreview } from "../utils/camara"
 import { initStickers, aplicarFiltro, previewPhoto, imageRef, canvasRef } from "../utils/stickers"
-import { useRouter } from 'vue-router'
-import { convertirABase64 } from "../utils/funciones.js"
 import dialogStatus from "../components/dialogStatus.vue"
-import {UrlWithApiRD, UrlWithApiDG, ENDPOINTS} from "../Service/apiConfig"
+import { UrlWithApiRD, ENDPOINTS } from "../Service/apiConfig"
+import {validarEdad} from "../utils/FuncionesRegistro"
 import { toRaw } from "vue"
 
-const router = useRouter()
 const props = defineProps({ modelValue: Boolean })
 const emit = defineEmits(["update:modelValue"])
 const filtrosActivos = ref([])
@@ -23,6 +21,7 @@ const dialogEvento = ref(false)
 const loadingEvento = ref(false)
 const dialogState = ref("")
 const dialogMessage = ref("")
+const cierre = ref()
 
 
 //Reglas para validar campos
@@ -30,33 +29,58 @@ const rules = {
     required: v => !!v || "Este campo es obligatorio",
     email: v => /.+@.+\..+/.test(v) || "Correo inválido",
     combo: v => (v && v.length > 0) || "Debe seleccionar al menos una notificación",
-    avatar: v => !!v || "Debe capturar o subir una foto"
+    avatar: v => !!v || "Debe capturar o subir una foto",
+    onlyNumbers: v => /^[0-9]*$/.test(v) || 'Solo se permiten números',
+    exactLength: v => v.length === 8 || 'El teléfono debe tener 8 dígitos',
+    edad: validarEdad
 }
+
+//Opciones de camara
+const onCerrarCamara = () => {
+    cerrarCamara(dialog)
+}
+
+// Validación para confirmar que las contraseñas coincidan
+
+const showPassword = ref(false)
+const passwordsMatch = v =>
+    v === formData.value.PasswordPlano || 'Las contraseñas no coinciden'
 
 const onAbrirCamara = () => {
     abrirCamara(dialog, videoRef, fileInput)
 }
 
+const onTomarFoto = async () => {
+    dialogEvento.value = true
+    loadingEvento.value = true
+    dialogState.value = ""
+    dialogMessage.value = ""
+    const respuesta = await tomarFoto(videoRef, formData, () => cerrarCamara(dialog))
+    if (respuesta.resultado) {
+        loadingEvento.value = false
+        dialogState.value = "success"
+        dialogMessage.value = respuesta.mensaje
+        cierre.value = 2000
+
+    } else {
+
+        loadingEvento.value = false
+        dialogState.value = "error"
+        dialogMessage.value = respuesta.mensaje
+        cierre.value = false
+    }
+}
+
 //Al detectar cambios, ejecuta cambiar el filtro
 watch(filtrosActivos, async (nuevo) => {
+  const resultado = await aplicarFiltro(nuevo, formData)
 
-    const blob = await aplicarFiltro(nuevo, formData)
+  if (!resultado) return   // 👈 si es undefined, no sigue
 
+  formData.value.Fotografia2Base64 = resultado.foto   // ✅ guardar la imagen/base64
 
-    formData.value.Fotografia2Base64 = blob
-    console.log("foto filtro:", formData.value.Fotografia2Base64)
 })
 
-//Opciones de camara
-
-
-const onCerrarCamara = () => {
-    cerrarCamara(dialog)
-}
-
-const onTomarFoto = () => {
-    tomarFoto(videoRef, formData, () => cerrarCamara(dialog))
-}
 
 //Limpia el formulario al cerrar
 const resetForm = () => {
@@ -71,10 +95,9 @@ const resetForm = () => {
         FechaNacimiento: "",
         RolId: 4,
         FotografiaBase64: "",
-        fotografiaMime: "",
+        fotografiaMime: "image/png",
         Fotografia2Base64: "",
         Fotografia2Mime: "image/png"
-        
         //notifications: []
     })
 
@@ -86,7 +109,7 @@ const resetForm = () => {
 // Datos del formulario
 const formData = ref({
     Email: "",
-    Nickname:"",
+    Nickname: "",
     PasswordPlano: "",
     Telefono: "",
     FechaNacimiento: "", // formato YYYY-MM-DD
@@ -95,18 +118,16 @@ const formData = ref({
     FotografiaMime: "image/png",
     Fotografia2Base64: "",
     Fotografia2Mime: "image/png"
-    
+
 })
 
 const fromNoti = ref({
     notifications: ""
-
-
 })
 
 //Inica los sticket y al tomar la foto se abre la vista previa
 onMounted(() => initStickers())
-watch(previewPhoto, () => aplicarFiltro())
+
 
 //Opcion para descargar la foto
 const guardarFoto = () => {
@@ -120,88 +141,63 @@ const guardarFoto = () => {
 
 //envia los campos al backend
 const submitForm = async () => {
-  // 🔹 Mostrar el diálogo en modo "procesando"
-  dialogEvento.value = true
-  loadingEvento.value = true
-  dialogState.value = ""
-  dialogMessage.value = ""
+    // 🔹 Mostrar el diálogo en modo "procesando"
+    dialogEvento.value = true
+    loadingEvento.value = true
+    dialogState.value = ""
+    dialogMessage.value = ""
 
-  // 🔹 Validar que existan fotos
+    // 🔹 Validar que existan fotos
 
 
-  if (!formData.value.FotografiaBase64 || !formData.value.Fotografia2Base64) {
-    loadingEvento.value = false
-    dialogState.value = "error"
-    dialogMessage.value = "⚠️ Debe capturar una foto y aplicar un filtro antes de registrar"
-    return
-  }
-
-  // 🔹 Validación del formulario
-  const { valid } = await form.value.validate()
-  if (!valid) {
-    loadingEvento.value = false
-    dialogState.value = "error"
-    dialogMessage.value = "⚠️ Por favor corrige los errores del formulario"
-    return
-  }
-
-  /*
-    const base64Foto = await convertirABase64(formData.value.FotografiaBase64)
-  formData.value.FotografiaBase64 = base64Foto
-
-  const base64Foto2 = await convertirABase64(formData.value.Fotografia2Base64)
-  formData.value.Fotografia2Base64 = base64Foto2
-*/
-
-const payload = toRaw(formData.value)
-
-console.log("Payload:", JSON.stringify(payload))
-  try {
-    // 🔹 Enviar datos a la API
-    const response = await fetch(UrlWithApiRD(ENDPOINTS.registro), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData.value)
-    })
-
-    const data = await response.json()
-    console.log("Respuesta API:", data)
-
-    if (response.ok) {
-      // ✅ Éxito
-      dialogState.value = "success"
-      dialogMessage.value = "Registro exitoso 🚀"
-      emit("update:modelValue", false)
-
-      // 👇 si quieres redirigir
-      // router.push('/usuario')
-    } else {
-      // ❌ Error de validación en API
-      dialogState.value = "error"
-      dialogMessage.value = data?.title || "❌ Error al registrar el usuario"
+    if (!formData.value.FotografiaBase64 || !formData.value.Fotografia2Base64) {
+        loadingEvento.value = false
+        dialogState.value = "error"
+        dialogMessage.value = "⚠️ Debe capturar una foto y aplicar un filtro antes de registrar"
+        cierre.value = 5000
+        return
     }
-  } catch (error) {
-    console.error("Error creando usuario:", error)
-    dialogState.value = "error"
-    dialogMessage.value = "❌ Error de conexión con el servidor"
-  } finally {
-    // 🔹 Quitar el spinner
-    loadingEvento.value = false
-  }
-}
 
+    // 🔹 Validación del formulario
+    const { valid } = await form.value.validate()
+    if (!valid) {
+        loadingEvento.value = false
+        dialogState.value = "error"
+        dialogMessage.value = "⚠️ Por favor corrige los errores del formulario"
+        return
+    }
 
-//Valida que el nickname no exista
-const validarNickname = async (value) => {
-    if (!value) return "El nickname es obligatorio"
     try {
-        const response = await fetch(
-            `https://micolegio.somee.com/api/usuarios/validar?nombre=${value}`
-        )
+        // 🔹 Enviar datos a la API
+        const response = await fetch(UrlWithApiRD(ENDPOINTS.registro), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData.value)
+        })
+
         const data = await response.json()
-        return data.existe === false || "El nickname ya está en uso"
-    } catch {
-        return "Error al validar nickname"
+        console.log("Respuesta API:", data)
+
+        if (response.ok) {
+            // ✅ Éxito
+            dialogState.value = "success"
+            dialogMessage.value = "Registro exitoso 🚀"
+            emit("update:modelValue", false)
+
+            // 👇 si quieres redirigir
+            // router.push('/usuario')
+        } else {
+            // ❌ Error de validación en API
+            dialogState.value = "error"
+            dialogMessage.value = data?.title || "❌ Error al registrar el usuario"
+        }
+    } catch (error) {
+        console.error("Error creando usuario:", error)
+        dialogState.value = "error"
+        dialogMessage.value = "❌ Error de conexión con el servidor"
+    } finally {
+        // 🔹 Quitar el spinner
+        loadingEvento.value = false
     }
 }
 
@@ -221,13 +217,23 @@ const validarNickname = async (value) => {
                     <v-text-field v-model="formData.Nickname" label="Nickname" :rules="[rules.required]" required />
                     <v-text-field v-model="formData.Email" label="Correo" type="email"
                         :rules="[rules.required, rules.email]" required />
-                    <v-text-field v-model="formData.Telefono" label="Teléfono" type="tel" :rules="[rules.required]"
+                    <v-text-field v-model="formData.Telefono" label="Teléfono" type="tel" maxlength="8"
+                        :rules="[rules.required, rules.onlyNumbers, rules.exactLength]"
                         required />
                     <v-text-field v-model="formData.FechaNacimiento" label="Fecha nacimiento" type="date"
-                        :rules="[rules.required]" required />
+                        :rules="[rules.required, rules.edad]" required />
 
-                    <v-text-field v-model="formData.PasswordPlano" label="Contraseña" type="password"
-                        :rules="[rules.required]" required />
+                    <v-text-field v-model="formData.PasswordPlano" label="Contraseña"
+                        :type="showPassword ? 'text' : 'password'"
+                        :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                        @click:append-inner="showPassword = !showPassword" :rules="[rules.required]" required />
+
+                    <v-text-field v-model="formData.PasswordRepeat" label="Repetir contraseña"
+                        :type="showPassword ? 'text' : 'password'"
+                        :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                        @click:append-inner="showPassword = !showPassword" :rules="[rules.required, passwordsMatch]"
+                        required />
+
 
                     <!-- ComboBox validado -->
                     <v-combobox v-model="fromNoti.notifications" label="Notificaciones" :items="['Correo', 'WhatsApp']"
@@ -276,11 +282,6 @@ const validarNickname = async (value) => {
         </v-card>
     </v-dialog>
 
-    <dialogStatus
-  v-model="dialogEvento"
-  :loading="loadingEvento"
-  :state="dialogState"
-  :message="dialogMessage"
-  :auto-close="3000"
-/>
+    <dialogStatus v-model="dialogEvento" :loading="loadingEvento" :state="dialogState" :message="dialogMessage"
+        :auto-close="cierre" />
 </template>

@@ -4,7 +4,7 @@ import { ref, nextTick } from "vue"
 
 export const filtros = ref(["perrito", "princesa", "lentes"])
 export const filtroActivo = ref(null)
-export const previewPhoto = ref(null)
+export const previewPhoto = ref()
 export const imageRef = ref(null)
 export const canvasRef = ref(null)
 
@@ -48,16 +48,25 @@ const drawCenteredRotated = (ctx, img, cx, cy, w, h, angleRad) => {
 }
 
 export const aplicarFiltro = async (filtrosSeleccionados = []) => {
-    if (!previewPhoto.value) return
+    
+    if (!previewPhoto.value){
+        console.log("fallo")
+        return} 
     await nextTick()
+    
 
     const img = imageRef.value
     const canvas = canvasRef.value
-    if (!img || !canvas) return
+    if (!img || !canvas) {console.log("IngresoStikert") 
+        
+        return}
     if (!img.complete || img.naturalWidth === 0) {
         await new Promise(r => { img.onload = r; img.onerror = r })
+        
     }
     if (!modelosListos()) return
+
+    
 
     const ctx = canvas.getContext("2d")
     canvas.width = img.naturalWidth
@@ -69,10 +78,11 @@ export const aplicarFiltro = async (filtrosSeleccionados = []) => {
         .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }))
         .withFaceLandmarks()
     if (!det) {
+        console.log("resutaldo")
 
-        alert("❌ No se detectó ningún rostro en la foto")
+        //alert("❌ No se detectó ningún rostro en la foto")
         previewPhoto.value = null
-        return null
+        return {verificado:false}
     }
 
     const lm = det.landmarks
@@ -118,7 +128,7 @@ export const aplicarFiltro = async (filtrosSeleccionados = []) => {
             case "bigote":
                 targetW = eyeDist * 1.8 // un poco más ancho que la nariz
                 targetH = targetW * ratio
-                posX = noseTip.x + 20
+                posX = noseTip.x + 30
                 posY = noseTip.y + eyeDist * 0.25 // 👈 debajo de la nariz
                 break
         }
@@ -130,6 +140,10 @@ export const aplicarFiltro = async (filtrosSeleccionados = []) => {
 
     const base64 = canvas.toDataURL("image/png");
     const soloBase64 = base64.split(",")[1]; // 👈 elimina "data:image/png;base64,"
-    return soloBase64;
+    console.log("resutaldo" + soloBase64)
+    return {
+        verificado:true,
+        foto:soloBase64
+    }
 }
 

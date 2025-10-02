@@ -46,16 +46,30 @@ const props = defineProps({
   modelValue: { type: Boolean, required: true },
   loading: { type: Boolean, default: true },
   state: { type: String, default: "" }, // "success" | "error"
-  message: { type: String, default: "" }
+  message: { type: String, default: "" },
+  autoClose: { type: [Boolean, Number], default: false }
 })
 
 const emit = defineEmits(["update:modelValue"])
 const internalVisible = ref(props.modelValue)
+let autoCloseTimer = null
 
 watch(
-  () => props.modelValue,
-  (val) => {
-    internalVisible.value = val
+  () => [props.modelValue, props.loading],
+  ([visible, loading]) => {
+    internalVisible.value = visible
+
+    if (visible && !loading && props.autoClose) {
+      // limpiar cualquier timer previo
+      if (autoCloseTimer) clearTimeout(autoCloseTimer)
+
+      const delay = typeof props.autoClose === "number" ? props.autoClose : 3000
+
+      autoCloseTimer = setTimeout(() => {
+        emit("update:modelValue", false)
+        autoCloseTimer = null
+      }, delay)
+    }
   }
 )
 </script>

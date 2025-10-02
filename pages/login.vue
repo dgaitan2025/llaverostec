@@ -88,9 +88,9 @@ import RecuperarDialog from "../components/recuperarclave.vue"
 import RegistroDialog from "../components/FromRegistro.vue"
 import { useRouter } from "vue-router"
 import dialogStatus from "../components/dialogStatus.vue"
-import {UrlWithApiRD, UrlWithApiDG, ENDPOINTS} from "../Service/apiConfig"
+import { UrlWithApiRD, ENDPOINTS } from "../Service/apiConfig"
 import { VerificarRostro } from "../utils/ApiRostro"
-import { abrirCamara, cerrarCamara, tomarFoto, mostrarPreview } from "../utils/camara"
+import { abrirCamara, cerrarCamara, tomarFaceID, mostrarPreview } from "../utils/camara"
 
 const dialogEvento = ref(false)
 const loadingEvento = ref(false)
@@ -108,7 +108,8 @@ const visible = ref(false)
 const formData = ref({
     Identificador: "",
     Password: "",
-    FotografiaBase64: ""
+    FotografiaBase64: "",
+    Foto: ""
 })
 
 
@@ -121,26 +122,6 @@ const rules = {
 const valid = ref(false)
 const form = ref(null)
 
-const faceID = async () => {
-
-
-    const errors = await usuarioField.value.validate() // 👉 []
-    if (errors.length > 0) {
-        console.log("❌ Error:", errors[0])
-        return
-    }
-
-    console.log("✅ Usuario válido:", formData.value.Identificador)
-    router.push("/usuario")
-
-
-    console.log("Validación correcta, procesando...")
-
-    setTimeout(() => {
-        console.log("✅ Datos:", formData.value)
-        router.push("/usuario")
-    }, 800)
-}
 
 const submitForm = async () => {
     await form.value.validate()
@@ -165,7 +146,7 @@ const submitForm = async () => {
         console.log("Respuesta API:", data)
 
 
-        if (response.ok && data.success) {
+        if (response.ok && data.estaActivo) {
             localStorage.setItem("usuario", JSON.stringify(data))
             const token = useCookie("token")
             token.value = JSON.stringify({ nickname: data.token })
@@ -176,13 +157,13 @@ const submitForm = async () => {
             // Redirigir según el rol
             if (data.rolId === 4) {
                 router.push("/usuario")
-            } else if (data.rolId  === 5) {
+            } else if (data.rolId === 5) {
                 router.push("/operador")
             } else {
                 navigateTo('/') // fallback
             }
 
-            
+
         } else {
             // ❌ Error de credenciales
             loadingEvento.value = false
@@ -193,10 +174,10 @@ const submitForm = async () => {
         // ❌ Error de red
         loadingEvento.value = false
         dialogState.value = "error"
-        dialogMessage.value = err.message.includes("Credenciales") 
-        ? err.message 
-        : "Error de conexión con el servidor"
-    console.error(err)
+        dialogMessage.value = err.message.includes("Credenciales")
+            ? err.message
+            : "Error de conexión con el servidor"
+        console.error(err)
     } finally {
         loading.value = false
     }
@@ -226,6 +207,9 @@ async function Verificar() {
     const datos = await VerificarRostro(formData.value.FotografiaBase64, usuarioLogueado.value.fotografia)
     return datos
 }
+
+
+/*
 
 const onTomarFoto = async () => {
     tomarFoto(videoRef, formData, () => cerrarCamara(dialog))
@@ -289,5 +273,73 @@ const onTomarFoto = async () => {
 
        
     })
+}*/
+
+const onTomarFoto = async () => {
+    dialogEvento.value = true
+    loadingEvento.value = true
+    dialogState.value = ""
+    dialogMessage.value = ""
+    // 👇 Capturamos el resultado
+    const respuesta = await tomarFaceID(videoRef, formData, () => cerrarCamara(dialog))
+
+    if (!respuesta.resultado) {
+        loadingEvento.value = false
+        dialogState.value = "error"
+        dialogMessage.value = "No se pudo capturar la foto"
+        return
+    }
+
+    
+    console.log("foto capturada:", formData.value.Foto.substring(0, 50))
+
+    try {
+        const response = await fetch(UrlWithApiRD(ENDPOINTS.loginFace), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData.value)
+        })
+
+        const data = await response.json()
+        console.log("Respuesta API:", data)
+
+
+        if (response.ok && data.estaActivo) {
+            localStorage.setItem("usuario", JSON.stringify(data))
+            const token = useCookie("token")
+            token.value = JSON.stringify({ nickname: data.token })
+            loadingEvento.value = false
+            dialogState.value = "success"
+            dialogMessage.value = "Bienvenido " + data.nickname
+
+            // Redirigir según el rol
+            if (data.rolId === 4) {
+                router.push("/usuario")
+            } else if (data.rolId === 5) {
+                router.push("/operador")
+            } else {
+                navigateTo('/') // fallback
+            }
+
+
+        } else {
+            // ❌ Error de credenciales
+            loadingEvento.value = false
+            dialogState.value = "error"
+            dialogMessage.value = data.message || "Error al iniciar sesión"
+        }
+    } catch (err) {
+        // ❌ Error de red
+        loadingEvento.value = false
+        dialogState.value = "error"
+        dialogMessage.value = err.message.includes("Credenciales")
+            ? err.message
+            : "Error de conexión con el servidor"
+        console.error(err)
+    } finally {
+        loading.value = false
+    }
+
+
 }
 </script>

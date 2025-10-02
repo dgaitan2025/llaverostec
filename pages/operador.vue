@@ -1,10 +1,10 @@
 <template>
-  <Sidebar :foto="usuario.photo" :title="usuario.nickname" :subtitle="usuario.email" :items="menuItems"
+  <Sidebar v-if="usuario && usuario.fotografia2" :foto="usuario.fotografia2" :title="usuario.nickname" :subtitle="usuario.email" :items="menuItems"
     @item-click="handleMenuClick">
     <div class="pa-6 text-center">
       <!-- Foto clickeable -->
       <v-avatar size="80" class="cursor-pointer" @click="dialogFoto = true">
-        <v-img :src="usuario.photo" alt="Foto de usuario" />
+        <v-img :src="usuario.fotografia2" alt="Foto de usuario" />
       </v-avatar>
       <h2 class="mt-4">Bienvenido {{ usuario.nickname }}</h2>
       <p>Aquí podrás crear tu llavero.</p>
@@ -63,7 +63,7 @@
   <!-- Dialog con la foto grande -->
   <v-dialog v-model="dialogFoto" max-width="500">
     <v-card>
-      <v-img :src="usuario.photo" alt="Foto en grande" />
+      <v-img :src="usuario.fotografia2" alt="Foto en grande" />
       <v-card-actions class="justify-center">
         <v-btn color="primary" @click="dialogFoto = false">Cerrar</v-btn>
       </v-card-actions>
