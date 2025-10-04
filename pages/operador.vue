@@ -7,7 +7,7 @@
         <v-img :src="usuario.fotografia2" alt="Foto de usuario" />
       </v-avatar>
       <h2 class="mt-4">Bienvenido {{ usuario.nickname }}</h2>
-      <p>Aquí podrás crear tu llavero.</p>
+      <p>Proceso de llavero</p>
     </div>
 
     <div v-if="mostrarFormulario" class="pa-6 text-center">
@@ -20,7 +20,7 @@
       </div>
 
       <div v-else-if="formDataNFC.tipoNFC === 'URL'">
-        <v-text-field v-model="formDataNFC.textUrl" label="Ingresa la URL" type="url"></v-text-field>
+        <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url"></v-text-field>
       </div>
 
       <div v-else-if="formDataNFC.tipoNFC === 'Contacto'">
@@ -92,17 +92,17 @@ onMounted(() => {
     formDataNFC.value = JSON.parse(datosGuardados)
 
     // ✅ Restaurar preview de la foto si existía
-    previewPhoto.value = formDataNFC.value.fotografia || null
+    previewPhoto.value = "data:image/png;base64,"+formDataNFC.value.foto_anverso || null
   }
 })
 
 //Formulario de NFC
 const formDataNFC = ref({
   tipoNFC: "",
-  textUrl: "",
+  link: "",
   nombre: "",
   telefono: "",
-  fotografia: "",
+  foto_anverso: "",
 })
 
 const guardarNFC = () => {
@@ -171,8 +171,8 @@ const nombre = ref("")  // ✅ agregado para evitar warning
 const email = ref("")   // ✅ agregado para evitar warning
 
 const menuItems = [
-  { icon: "mdi-image", title: "Crear llavero", value: "shared" },
-  { icon: "mdi-folder", title: "Mis diseños", value: "myfiles" },
+  { icon: "mdi-briefcase", title: "Asignar Orden", value: "shared" },
+  { icon: "mdi-folder", title: "Orden procesadas", value: "myfiles" },
   { icon: "mdi-login", title: "Salir", value: "exit" }
 ]
 

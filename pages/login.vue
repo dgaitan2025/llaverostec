@@ -281,7 +281,7 @@ const onTomarFoto = async () => {
     dialogState.value = ""
     dialogMessage.value = ""
     // 👇 Capturamos el resultado
-    const respuesta = await tomarFaceID(videoRef, formData, () => cerrarCamara(dialog))
+    const respuesta = await tomarFaceID(videoRef, formData,"Foto", () => cerrarCamara(dialog))
 
     if (!respuesta.resultado) {
         loadingEvento.value = false

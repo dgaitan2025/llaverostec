@@ -34,7 +34,7 @@ async function RecortarRostro() {
   return datos
 }
 
-export const tomarFaceID = async (videoRef, formData, cerrarFn) => {
+export const tomarFaceID = async (videoRef, formData, campoFoto, cerrarFn) => {
   if (!videoRef.value) {
     return { resultado: false, mensaje: "No hay cámara" }
   }
@@ -43,11 +43,12 @@ export const tomarFaceID = async (videoRef, formData, cerrarFn) => {
   canvasTmp.width = videoRef.value.videoWidth
   canvasTmp.height = videoRef.value.videoHeight
   canvasTmp.getContext("2d").drawImage(videoRef.value, 0, 0)
-  formData.value.Foto = canvasTmp.toDataURL("image/png").split(",")[1]
+
+  // 🔹 Guardar en el campo dinámico
+  formData.value[campoFoto] = canvasTmp.toDataURL("image/png").split(",")[1]
 
   cerrarFn()
-  return { resultado: true, mensaje: "Rostro Reconocido" }
-  
+  return { resultado: true, mensaje: `✅ Foto guardada en '${campoFoto}'` }
 }
 
 export const tomarFoto = async (videoRef, formData, cerrarFn) => {
