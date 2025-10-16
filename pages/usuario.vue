@@ -13,20 +13,20 @@
     <div v-if="mostrarFormulario" class="pa-6 text-center">
       <!-- Selector de tipo de dato -->
 
-      <v-select v-model="formDataNFC.Id_Tipo_Grabado" :items="[
+      <v-select v-model="formDataNFC.id_tipo_grabado" :items="[
         { text: 'URL', value: 1 },
         { text: 'Contacto', value: 2 },
 
       ]" item-title="text" item-value="value" label="Grabador de NFC" />
       <!-- Campos condicionales -->
 
-      <div v-if="formDataNFC.Id_Tipo_Grabado === 1">
+      <div v-if="formDataNFC.id_tipo_grabado === 1">
         <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url"></v-text-field>
       </div>
 
-      <div v-else-if="formDataNFC.Id_Tipo_Grabado === 2">
-        <v-text-field v-model="formDataNFC.Nombre" label="Nombre"></v-text-field>
-        <v-text-field v-model="formDataNFC.telefonoC" label="Telefono"></v-text-field>
+      <div v-else-if="formDataNFC.id_tipo_grabado === 2">
+        <v-text-field v-model="formDataNFC.nombre" label="Nombre"></v-text-field>
+        <v-text-field v-model="formDataNFC.telefono_detalle" label="Telefono"></v-text-field>
       </div>
 
       <!-- Tomar Foto -->
@@ -80,7 +80,7 @@
 
       <div v-if="formDataNFC.foto_reverso" style="text-align:center; margin-top:8px;">
         <!-- Marco fijo -->
-        <div
+        <div ref="marcoReversoRef"
           style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
           <!-- Imagen -->
           <img :src="`data:image/png;base64,${formDataNFC.foto_reverso}`" :style="{
@@ -110,6 +110,7 @@
       <v-select v-model="formDataNFC.entrega" :items="['Presencial', 'Domicilio']" label="Entrega" />
 
       <div v-if="formDataNFC.entrega === 'Domicilio'">
+
         <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre"></v-text-field>
         <v-text-field v-model="formDataNFC.telefono" label="Telefono"></v-text-field>
         <v-text-field v-model="formDataNFC.direccion_entrega" label="Direccion"></v-text-field>
@@ -122,10 +123,20 @@
       <v-btn color="primary" size="small" class="mt-4" @click="guardarNFC">Solicitar</v-btn>
     </div>
 
+  <div v-if="mostrarCardFinalizados" class="pa-6 text-center">
+    <CardGrabado :grabados="listaGrabados" />
+  </div>
 
+    <!-- dasboard -->
 
+    <div v-if="mostrardashboard" class="pa-6 text-center">
+      <OrdenCard
+      v-for="item in ordenes"
+      :key="item.id_Orden"
+      :orden="item"
+    />
 
-
+    </div>
 
   </Sidebar>
 
@@ -148,13 +159,44 @@
 <script setup>
 import Sidebar from "../components/barraUser.vue"
 import PiePagina from "../components/piePagina.vue"
-import { ref, onMounted } from "vue"
+import { ref, onMounted, onUnmounted } from "vue"
 import { useRouter } from "vue-router"
 import { abrirCamara, cerrarCamara, tomarFaceID, mostrarPreview } from "../utils/camara"
 import { previewPhoto } from "../utils/stickers"
 import { UrlWithApiRD, ENDPOINTS } from "../Service/apiConfig"
 import dialogStatus from "../components/dialogStatus.vue"
 import html2canvas from "html2canvas";
+import { startConnection, on } from "../utils/signalr";
+import { watch } from "vue"
+import OrdenCard from "../components/cardDash.vue"
+import { ordenCliente } from "../utils/API_ordenes"
+import CardGrabado from "../components/cardProdFinalizado.vue"
+
+const ordenes = ref([])
+
+
+let connectionListener = null;
+
+onMounted(async () => {
+  connectionListener = async (payload) => {
+    console.log("📡 Datos recibidos:", payload);
+    ordenes.value = await ordenCliente(usuario.value.usuarioId);
+  };
+
+  on("RecibirSaludo", connectionListener);
+  await startConnection();
+});
+
+onUnmounted(() => {
+  // elimina el listener cuando el componente se destruye
+  if (connectionListener) {
+    connection.off("RecibirSaludo", connectionListener);
+    connectionListener = null;
+    console.log("🧹 Listener eliminado correctamente");
+  }
+});
+
+
 const dialog = ref(false)
 const videoRef = ref(null)
 const fileInput = ref(null)
@@ -178,16 +220,16 @@ onMounted(() => {
     if (usuarioGuardado) {
       usuario.value = JSON.parse(usuarioGuardado)
       formDataNFC.id_Usuario = usuario.value.usuarioId
-
-
     }
   }
 })
 
+
+
 // Función para rotar
 const rotarImagen = () => {
   rotation.value = (rotation.value + 90) % 360 // rota en pasos de 90°
-//  capturarImagen(marcoFrontalRef, 'frontal')
+  //capturarImagen(marcoFrontalRef, 'frontal')
   console.log(rotation)
 }
 
@@ -227,12 +269,12 @@ const formDataNFC = ref({
   direccion_entrega: "",
   telefono: "",
   estado: 1,
+  entrega_domicilio: false,
 
 
   detalles: JSON.stringify([
     {
       id_articulo: 1,
-      id_fase: 3,
       cantidad: 1,
       precio: 50,
       subtotal: 50,
@@ -240,16 +282,18 @@ const formDataNFC = ref({
       foto_reverso: "",
       link: "",
       texto: "No valido",
-      Id_Tipo_Grabado: 0,
-      Nombre: "",
-      telefonoC: 0,
-      
+      id_tipo_grabado: 0,
+      nombre: "",
+      telefono_detalle: 0,
+
     }
   ])
 
 })
 
-
+watch(() => formDataNFC.value.entrega, (nuevoValor) => {
+  formDataNFC.value.entrega_domicilio = (nuevoValor === 'Domicilio')
+})
 
 
 function getFechaActual() {
@@ -267,10 +311,11 @@ const guardarNFC = async () => {
   dialogState.value = ""
   dialogMessage.value = ""
   capturarImagen(marcoFrontalRef, 'frontal')
+  capturarImagen(marcoReversoRef, 'reverso')
 
   try {
     const orden = {
-      id_Usuario: formDataNFC.value.id_Usuario,
+      id_Usuario: usuario.value.usuarioId,
       id_Tipo_Pago: formDataNFC.value.id_Tipo_Pago,
       fecha: formDataNFC.value.fecha,
       total: formDataNFC.value.total,
@@ -278,19 +323,19 @@ const guardarNFC = async () => {
       direccion_entrega: formDataNFC.value.direccion_entrega,
       telefono: formDataNFC.value.telefono,
       estado: formDataNFC.value.estado,
+      entrega_domicilio: formDataNFC.value.entrega_domicilio ? 1 : 0,
       detalles: JSON.stringify([{
         id_articulo: 1,
-        id_fase: 3,
         cantidad: 1,
         precio: 50,
         subtotal: 50,
         foto_anverso: formDataNFC.value.foto_anverso,
         foto_reverso: formDataNFC.value.foto_reverso,
-        link: formDataNFC.value.link || "",
         texto: "No valido",
-        Id_Tipo_Grabado: formDataNFC.value.Id_Tipo_Grabado,
-        Nombre: formDataNFC.value.Nombre,
-        telefonoC: formDataNFC.value.telefonoC,
+        id_tipo_grabado: formDataNFC.value.id_tipo_grabado,
+        link: formDataNFC.value.link || "",
+        nombre: formDataNFC.value.nombre,
+        telefono_detalle: formDataNFC.value.telefono_detalle,
       }])
     }
 
@@ -308,6 +353,11 @@ const guardarNFC = async () => {
       loadingEvento.value = false
       dialogState.value = "success"
       dialogMessage.value = "Creada con exitoso " + data.id_orden
+      cierre.value = 2000
+    } else {
+      loadingEvento.value = false
+      dialogState.value = "error"
+      dialogMessage.value = "Error al crear la orden"
       cierre.value = 2000
     }
 
@@ -401,10 +451,14 @@ const dialogFoto = ref(false)
 const fotoCapturada = ref(null)
 const nombre = ref("")  // ✅ agregado para evitar warning
 const email = ref("")   // ✅ agregado para evitar warning
+const mostrardashboard = ref(false)
+const mostrarCardFinalizados = ref(false)
+const listaGrabados = ref([]);
 
 const menuItems = [
   { icon: "mdi-image", title: "Crear llavero", value: "shared" },
   { icon: "mdi-folder", title: "Mis diseños", value: "myfiles" },
+  { icon: "mdi-monitor-dashboard", title: "Dashboard", value: "dashboard" },
   { icon: "mdi-login", title: "Salir", value: "exit" }
 ]
 
@@ -417,62 +471,44 @@ const usuario = ref({
 
 
 
-const handleMenuClick = (item) => {
+async function handleMenuClick (item) {
   if (item.value === "exit") {
     const sesion = useCookie("token")
     sesion.value = null
     localStorage.removeItem("usuario")
     router.push("/login")
   } else if (item.value === "shared") {
+    mostrarCardFinalizados.value = false;
+    mostrardashboard.value = false; 
     mostrarFormulario.value = true   // 👈 activa el formulario
-  } else {
-    mostrarFormulario.value = false  // 👈 oculta en otras opciones
+  }
+  else if (item.value === "dashboard") {
+    //conectar()
+    mostrarFormulario.value = false
+    mostrarCardFinalizados.value = false
+    
+    ordenes.value= await ordenCliente(usuario.value.usuarioId)
+    console.log(ordenes.value)
+    
+    
+    mostrardashboard.value = true   // 👈 activa el formulario
+  } else if(item.value === "myfiles") {
+    mostrardashboard.value = false
+    mostrarFormulario.value = false
+    const resultado = await obtenerOrdenFinalizadas(usuario.value.usuarioId);
+    console.log("Datos finalizados", resultado);
+
+    // Asigna al ref (no lo redeclares con const)
+    listaGrabados.value = resultado;
+
+    mostrarCardFinalizados.value = true;
   }
 }
 
-// 🔹 Selección de tipo de dato
-const tipoDato = ref("Texto")
-const mensaje = ref("")
 
-// 🔹 Escritura en NFC
-async function escribir() {
-  if (!("NDEFReader" in window)) {
-    alert("❌ Este dispositivo o navegador no soporta NFC.");
-    return;
-  }
-
-  let record;
-
-  if (tipoDato.value === "Texto") {
-    record = { recordType: "text", data: mensaje.value }
-  }
-  else if (tipoDato.value === "URL") {
-    record = { recordType: "url", data: mensaje.value }
-  }
-  else if (tipoDato.value === "Contacto") {
-    // vCard básico (puedes personalizarlo con más campos)
-    const vcard = `BEGIN:VCARD
-      VERSION:3.0
-      FN:${usuario.value.nickname}
-      EMAIL:${usuario.value.email}
-      END:VCARD`
-    record = { recordType: "mime", mediaType: "text/vcard", data: vcard }
-  }
-
-  try {
-    const ndef = new NDEFReader();
-    await ndef.write({ records: [record] });
-    alert(`✅ ${tipoDato.value} escrito correctamente en NFC`);
-  } catch (err) {
-    console.error(err);
-    alert("⚠️ Error al escribir: " + err);
-  }
-}
 
 const fileInput2 = ref(null)
 const opcionFoto2 = ref(null)
-
-
 
 const mostrarPreview2 = (e) => {
   const file = e.target.files[0]

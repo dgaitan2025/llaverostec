@@ -1,8 +1,7 @@
 <template>
-  <Sidebar v-if="usuario && usuario.fotografia2" :foto="usuario.fotografia2" :title="usuario.nickname" :subtitle="usuario.email" :items="menuItems"
-    @item-click="handleMenuClick">
+  <Sidebar v-if="usuario && usuario.fotografia2" :foto="usuario.fotografia2" :title="usuario.nickname"
+    :subtitle="usuario.email" :items="menuItems" @item-click="handleMenuClick">
     <div class="pa-6 text-center">
-      <!-- Foto clickeable -->
       <v-avatar size="80" class="cursor-pointer" @click="dialogFoto = true">
         <v-img :src="usuario.fotografia2" alt="Foto de usuario" />
       </v-avatar>
@@ -10,57 +9,81 @@
       <p>Proceso de llavero</p>
     </div>
 
+    <!-- Formulario NFC -->
     <div v-if="mostrarFormulario" class="pa-6 text-center">
-      <!-- Selector de tipo de dato -->
-      <v-select v-model="formDataNFC.tipoNFC" :items="['Texto', 'URL', 'Contacto']" label="Selecciona qué grabar en NFC" />
-
-      <!-- Campos condicionales -->
-      <div v-if="formDataNFC.tipoNFC === 'Texto'">
-        <v-textarea v-model="formDataNFC.textUrl" label="Escribe el texto a grabar" auto-grow></v-textarea>
+      <div>
+        <OrdenCard
+      v-for="item in ordenes"
+      :key="item.id_Orden"
+      :orden="item"
+    />
       </div>
 
-      <div v-else-if="formDataNFC.tipoNFC === 'URL'">
-        <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url"></v-text-field>
+      <v-select class="mt-4" v-model="formDataNFC.id_tipo_grabado" :items="[
+        { text: 'URL', value: 1 },
+        { text: 'Contacto', value: 2 }
+      ]" item-title="text" item-value="value" label="Grabador de NFC" disabled />
+
+      <!-- URL -->
+      <div v-if="formDataNFC.id_tipo_grabado === 1">
+        <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url" disabled />
       </div>
 
-      <div v-else-if="formDataNFC.tipoNFC === 'Contacto'">
-        <v-text-field v-model="formDataNFC.nombre" label="Nombre"></v-text-field>
-        <v-text-field v-model="formDataNFC.telefono" label="Telefono"></v-text-field>
+      <!-- Contacto -->
+      <div v-else-if="formDataNFC.id_tipo_grabado === 2">
+        <v-text-field v-model="formDataNFC.nombre" label="Nombre" disabled />
+        <v-text-field v-model="formDataNFC.telefono_detalle" label="Teléfono" disabled />
       </div>
 
-      <!-- Tomar Foto -->
-      <v-select v-model="opcionFoto" :items="['Tomar Foto', 'Subir Archivo']" label="Selecciona cómo agregar la foto"
-        prepend-icon="mdi-camera" @update:model-value="manejarSeleccionFoto" />
+      <!-- Foto Anverso -->
+      <v-select v-model="opcionFoto" :items="['Tomar Foto', 'Subir Archivo']" label="Fotografía Anverso"
+        prepend-icon="mdi-camera" @update:model-value="manejarSeleccionFoto" disabled />
 
-      <v-dialog v-model="dialog" max-width="600">
-        <v-card>
-          <v-card-title>Tomar Foto</v-card-title>
-          <v-card-text>
-            <video ref="videoRef" autoplay playsinline style="width:100%; border-radius:8px;" />
-          </v-card-text>
-          <v-card-actions>
-            <v-btn color="green" @click="onTomarFoto">Capturar</v-btn>
-            <v-btn color="red" @click="onCerrarCamara">Cancelar</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-      <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="mostrarPreview" />
+      <input ref="fileInput" type="file" accept="image/*" hidden @change="mostrarPreview1" />
 
-      <div v-if="previewPhoto" class="pa-6 text-center">
-        <v-img :src="previewPhoto" max-width="300" class="mx-auto rounded" alt="Vista previa" />
-
+      <div v-if="formDataNFC.foto_anverso" class="mt-4 text-center">
+        <div
+          style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+          <img :src="`data:image/png;base64,${formDataNFC.foto_anverso}`" :style="{
+            transform: `rotate(${rotation}deg)`,
+            objectFit: 'contain',
+            width: 'auto',
+            height: '100%'
+          }" />
+        </div>
+        <v-btn color="primary" size="small" class="mt-2" @click="rotarImagen">Rotar</v-btn>
       </div>
-      <v-btn color="primary" @click="escribir">Grabar NFC</v-btn>
+
+      <!-- Foto Reverso -->
+      <v-select v-model="opcionFoto2" :items="['Tomar Foto 2', 'Subir Archivo 2']" label="Fotografía Reverso"
+        prepend-icon="mdi-camera" @update:model-value="manejarSeleccionFoto2" disabled />
+
+      <input ref="fileInput2" type="file" accept="image/*" hidden @change="mostrarPreview2" />
+
+      <div v-if="formDataNFC.foto_reverso" class="mt-4 text-center">
+        <div
+          style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+          <!-- Imagen -->
+          <div
+            style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+            <img :src="`data:image/png;base64,${formDataNFC.foto_reverso}`" :style="{
+              transform: `rotate(${rotation2}deg)`,
+              objectFit: 'contain',
+              width: 'auto',
+              height: '100%'
+            }" />
+          </div>
+        </div>
+        <v-btn color="primary" size="small" class="mt-2" @click="rotarImagen2">Rotar</v-btn>
+      </div>
+
+      <BotonSecuencial :acciones="acciones" reiniciar @accion-ejecutada="accionEjecutada"
+        @completado="flujoCompletado" />
+
     </div>
-
-
-
-
-
-
   </Sidebar>
 
-  <!-- Dialog con la foto grande -->
+  <!-- Foto ampliada -->
   <v-dialog v-model="dialogFoto" max-width="500">
     <v-card>
       <v-img :src="usuario.fotografia2" alt="Foto en grande" />
@@ -71,6 +94,9 @@
   </v-dialog>
 
   <PiePagina />
+
+  <dialogStatus v-model="dialogEvento" :loading="loadingEvento" :state="dialogState" :message="dialogMessage"
+    :auto-close="3000" />
 </template>
 
 <script setup>
@@ -78,178 +104,279 @@ import Sidebar from "../components/barraUser.vue"
 import PiePagina from "../components/piePagina.vue"
 import { ref, onMounted } from "vue"
 import { useRouter } from "vue-router"
-import { abrirCamara, cerrarCamara, tomarFoto, mostrarPreview } from "../utils/camara"
+import { abrirCamara, cerrarCamara, tomarFoto } from "../utils/camara"
 import { previewPhoto } from "../utils/stickers"
+import { generarHtmlImpresion } from "../utils/imprimir"
+import BotonSecuencial from "../components/botonMultiTarea.vue"
+import { obtenerOrdenPendiente } from "../utils/API_ordenes"
+import dialogStatus from "../components/dialogStatus.vue"
+import OrdenCard from "../components/cardDash.vue"
+
+const dialogEvento = ref(false)
+const loadingEvento = ref(false)
+const dialogState = ref("")
+const dialogMessage = ref("")
+const ordenes = ref([])
+const loading = ref(false)
+
+onMounted(async () => {
+  // registra el listener antes de conectar
+  on("RecibirSaludo", async (payload) => {
+    console.log("📡 Datos recibidos:", payload);
+    ordenes.value = {
+    id: payload.orden,
+    estado: payload.estado,
+    avance: payload.avance,
+    pasoActual: payload.pasoActual,
+  }
+  });
+
+  // inicia conexión
+  await startConnection();
+});
+
+
+const orden = ref(0);
+const estados = ref("Esperando actualización...");
+const avance = ref(0);
+
+const acciones = [
+  {
+    label: 'Imprimir,recorte y armado',
+    valor: 'imprimir',
+    funcion: async () => {
+      await avanzarFaseOrden(formDataNFC.value.id_Detalle);
+      imprimirFotos()
+      await new Promise(r => setTimeout(r, 5000))
+    }
+  },
+  {
+    label: '📅 Programar',
+    valor: 'programar',
+    funcion: async () => {
+      await avanzarFaseOrden(formDataNFC.value.id_Detalle);
+      escribir()
+      await new Promise(r => setTimeout(r, 1000))
+
+    }
+  },
+  {
+    label: '🧪 Probar',
+    valor: 'probar',
+    funcion: async () => {
+      await avanzarFaseOrden(formDataNFC.value.id_Detalle);
+      console.log('Probando...')
+      await new Promise(r => setTimeout(r, 1000))
+      alert('Prueba completada 🚀')
+    }
+  },
+  {
+    label: '📦 Entregar',
+    valor: 'entregar',
+    funcion: async () => {
+      await avanzarFaseOrden(formDataNFC.value.id_Detalle);
+      await new Promise(r => setTimeout(r, 1000))
+    }
+  }
+]
+
+const accionEjecutada = (accion) => {
+  console.log('✅ Acción ejecutada:', accion.valor)
+}
+
+const flujoCompletado = () => {
+  console.log('🎉 Todas las acciones completadas')
+  alert('Proceso finalizado 🎉')
+}
+
+
+const imprimirFotos = () => {
+  const anverso = formDataNFC.value.foto_anverso
+  const reverso = formDataNFC.value.foto_reverso
+
+  if (!anverso || !reverso) {
+    alert("Faltan fotos. Asegúrate de cargar Anverso y Reverso.")
+    return
+  }
+
+  const html = generarHtmlImpresion({
+    anverso: `data:image/png;base64,${anverso}`,
+    reverso: `data:image/png;base64,${reverso}`,
+    rotationDegFront: rotation.value || 0,
+    rotationDegBack: rotation2.value || 0,
+    titulo: "Carnet – Llavero"
+  })
+
+  const w = window.open("", "_blank")
+  w.document.open()
+  w.document.write(html)
+  w.document.close()
+}
+
 const dialog = ref(false)
+const dialogFoto = ref(false)
 const videoRef = ref(null)
 const fileInput = ref(null)
+const fileInput2 = ref(null)
+
 const opcionFoto = ref(null)
+const opcionFoto2 = ref(null)
+const mostrarFormulario = ref(false)
 
+const router = useRouter()
+const rotation = ref(0)
+const rotation2 = ref(0)
 
-onMounted(() => {
-  const datosGuardados = localStorage.getItem("formDataNFC")
-  if (datosGuardados) {
-    formDataNFC.value = JSON.parse(datosGuardados)
-
-    // ✅ Restaurar preview de la foto si existía
-    previewPhoto.value = "data:image/png;base64,"+formDataNFC.value.foto_anverso || null
-  }
+const usuario = ref({
+  id: null,
+  email: "",
+  nickname: "",
+  fotografia2: ""
 })
 
-//Formulario de NFC
 const formDataNFC = ref({
   tipoNFC: "",
+  textUrl: "",
+  id_orden: "",
+  fase: "",
+  barraAvance: "",
   link: "",
   nombre: "",
-  telefono: "",
+  telefono_detalle: "",
   foto_anverso: "",
+  foto_reverso: "",
+  id_tipo_grabado: null,
+  id_Detalle: 0,
+  domicilio: 0,
 })
 
-const guardarNFC = () => {
-  try {
-    formDataNFC.value.fotografia = previewPhoto.value
-    // 1️⃣ Guardar en localStorage
-    localStorage.setItem("formDataNFC", JSON.stringify(formDataNFC.value))
-    alert("✅ Datos guardados en localStorage")
+// 🔹 Restaurar datos del localStorage
+onMounted(() => {
+  const usuarioGuardado = localStorage.getItem("usuario")
+  if (usuarioGuardado) usuario.value = JSON.parse(usuarioGuardado)
+})
 
-    // 2️⃣ Resetear campos
-    formDataNFC.value = {
-      tipoNFC: "",
-      textUrl: "",
-      nombre: "",
-      telefono: "",
-      fotografia: "",
-    }
-
-    // 3️⃣ Limpiar preview/canvas
-    previewPhoto.value = null
-    if (canvasRef.value) {
-      const ctx = canvasRef.value.getContext("2d")
-      ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
-    }
-  } catch (error) {
-    console.error("❌ Error al guardar en localStorage:", error)
-  }
-}
-
-
+// 📸 Funciones de cámara
 const manejarSeleccionFoto = (valor) => {
-  if (valor === 'Tomar Foto') {
-    onAbrirCamara()  // 👈 tu función existente
-    opcionFoto.value = null
-  } else if (valor === 'Subir Archivo') {
-    fileInput.value.click() // 👈 dispara input de archivo
-    opcionFoto.value = null
+  if (valor === "Tomar Foto") onAbrirCamara()
+  else if (valor === "Subir Archivo") fileInput.value.click()
+}
+
+const manejarSeleccionFoto2 = (valor) => {
+  if (valor === "Tomar Foto 2") onAbrirCamara()
+  else if (valor === "Subir Archivo 2") fileInput2.value.click()
+}
+
+const onAbrirCamara = () => abrirCamara(dialog, videoRef, fileInput)
+
+
+const mostrarPreview1 = (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = () => (formDataNFC.value.foto_anverso = reader.result.split(",")[1])
+    reader.readAsDataURL(file)
   }
 }
 
-const onAbrirCamara = () => {
-  abrirCamara(dialog, videoRef, fileInput)
-
-
+const mostrarPreview2 = (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = () => (formDataNFC.value.foto_reverso = reader.result.split(",")[1])
+    reader.readAsDataURL(file)
+  }
 }
 
-const onCerrarCamara = () => {
-  cerrarCamara(dialog)
+// 🔁 Rotaciones
+const rotarImagen = async () => (rotation.value = (rotation.value + 90) % 360)
+const rotarImagen2 = async () => (rotation2.value = (rotation2.value + 90) % 360)
 
-}
-
-const onTomarFoto = () => {
-  tomarFoto(videoRef, formDataNFC, () => {
-    cerrarCamara(dialog)
-    previewPhoto.value = formDataNFC.value.fotografia  // ✅ usar lo que ya guardó
-    console.log("foto a ver " + previewPhoto.value)
-  })
-}
-
-
-const mostrarFormulario = ref(false)
-const router = useRouter()
-const dialogFoto = ref(false)
-const fotoCapturada = ref(null)
-const nombre = ref("")  // ✅ agregado para evitar warning
-const email = ref("")   // ✅ agregado para evitar warning
-
+// 🔹 Sidebar
 const menuItems = [
   { icon: "mdi-briefcase", title: "Asignar Orden", value: "shared" },
   { icon: "mdi-folder", title: "Orden procesadas", value: "myfiles" },
   { icon: "mdi-login", title: "Salir", value: "exit" }
 ]
 
-const usuario = ref({
-  id: null,
-  email: "",
-  nickname: "",
-  photo: ""
-})
+const ordenPendiente = ref(null)
 
-onMounted(() => {
-  if (process.client) {
-    const usuarioGuardado = localStorage.getItem("usuario")
-    if (usuarioGuardado) {
-      usuario.value = JSON.parse(usuarioGuardado)
-    }
-  }
-})
-
-const handleMenuClick = (item) => {
+const handleMenuClick = async (item) => {
   if (item.value === "exit") {
-    const sesion = useCookie("usuario")
-    sesion.value = null
     localStorage.removeItem("usuario")
+    localStorage.removeItem("ordenPendiente")
     router.push("/login")
   } else if (item.value === "shared") {
-    mostrarFormulario.value = true   // 👈 activa el formulario
+    dialogEvento.value = true
+    loadingEvento.value = true
+    dialogState.value = ""
+    dialogMessage.value = ""
+
+    // Llamar al backend para obtener orden pendiente
+    ordenPendiente.value = await obtenerOrdenPendiente(usuario.value.usuarioId)
+    ordenes.value = await ordenCliente(usuario.value.usuarioId);
+    console.log("ordenes ", ordenes.value)
+
+    // 🔍 Si no hay datos (null, undefined o vacío), cerrar el diálogo y salir
+    if (!ordenPendiente.value) {
+      loadingEvento.value = false
+      dialogState.value = "error"
+      dialogMessage.value = "No hay orden pendientes"
+
+      return
+    }
+
+    // Si hay datos, continuar con el flujo normal
+    const datosGuardados = localStorage.getItem("ordenPendiente")
+    if (datosGuardados) {
+      formDataNFC.value = JSON.parse(datosGuardados)
+      console.log("📦 Datos form:", formDataNFC.value)
+    }
+
+    orden.value = formDataNFC.value.id_orden
+    console.log("✅ Datos de orden:", ordenPendiente.value)
+
+    // Mostrar formulario
+    loadingEvento.value = false
+    dialogState.value = "success"
+    dialogMessage.value = "Orden " + formDataNFC.value.id_orden
+    loadingEvento.value = false
+    mostrarFormulario.value = true
   } else {
-    mostrarFormulario.value = false  // 👈 oculta en otras opciones
+    mostrarFormulario.value = false
   }
 }
 
-// 🔹 Selección de tipo de dato
-const tipoDato = ref("Texto")
-const mensaje = ref("")
-
-// 🔹 Escritura en NFC
+// 🔹 Escritura NFC
 async function escribir() {
   if (!("NDEFReader" in window)) {
-    alert("❌ Este dispositivo o navegador no soporta NFC.");
-    return;
+    alert("❌ Este dispositivo o navegador no soporta NFC.")
+    return
   }
 
-  let record;
-
-  if (formDataNFC.value.tipoNFC === "Texto") {
-    record = { recordType: "text", data: formDataNFC.value.textUrl }
-  }
-  else if (formDataNFC.value.tipoNFC === "URL") {
-    record = { recordType: "url", data: formDataNFC.value.textUrl }
-  }
-  else if (formDataNFC.value.tipoNFC === "Contacto") {
-    const vcard = `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${formDataNFC.value.nombre}\r\nTEL:${formDataNFC.value.telefono}\r\nEND:VCARD`;
-
-    // Convertir string a bytes (UTF-8)
-    const encoder = new TextEncoder();
-    const vcardBytes = encoder.encode(vcard);
-
-    record = {
-      recordType: "mime",
-      mediaType: "text/vcard",
-      data: vcardBytes  // ✅ ahora es Uint8Array
-    }
+  let record
+  if (formDataNFC.value.id_tipo_grabado === 1) {
+    record = { recordType: "url", data: formDataNFC.value.link }
+  } else if (formDataNFC.value.id_tipo_grabado === 2) {
+    const vcard = `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${formDataNFC.value.nombre}\r\nTEL:${formDataNFC.value.telefono_detalle}\r\nEND:VCARD`
+    const encoder = new TextEncoder()
+    record = { recordType: "mime", mediaType: "text/vcard", data: encoder.encode(vcard) }
   }
 
   try {
-    const ndef = new NDEFReader();
-    await ndef.write({ records: [record] });
-    alert(`✅ ${formDataNFC.value.tipoNFC} escrito correctamente en NFC`);
+    const ndef = new NDEFReader()
+    await ndef.write({ records: [record] })
+    alert("✅ NFC grabado correctamente.")
   } catch (err) {
-    console.error(err);
-    alert("⚠️ Error al escribir: " + err);
+    console.error(err)
+    alert("⚠️ Error al escribir: " + err)
   }
 }
 
-const formData = ref({
-
-  fotografia: "",
-})
+async function avanzarFaseOrden(idDetalle) {
+  const result = await actualizarEstadoOrden(idDetalle);
+  if (result?.mensaje) {
+    console.log(result.mensaje);
+  }
+}
 </script>
