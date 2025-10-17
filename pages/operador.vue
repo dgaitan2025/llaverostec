@@ -449,6 +449,7 @@ async function escribir() {
   loadingEvento.value = true;
   dialogState.value = "";
   dialogMessage.value = "Aproximar la NFC";
+  console.log("Link a grabar ", formDataNFC.value.link?.trim())
 
   // 🚫 Validar soporte NFC
   if (!("NDEFReader" in window)) {
@@ -470,12 +471,17 @@ async function escribir() {
       dialogMessage.value = "Debe ingresar una URL válida.";
       return { ok: false, error: "URL vacía" };
     }
-    
 
-    record = {
-      recordType: "url", // 👈 formato correcto
-      data: link,
-    };
+
+    const ndef = new NDEFReader();
+    try {
+      await ndef.write({
+        records: [{ recordType: "url", data: link }]
+      });
+      alert("URL escrita en la etiqueta.");
+    } catch (err) {
+      console.error("Error escribiendo NFC:", err);
+    }
   } else if (formDataNFC.value.id_tipo_grabado === 2) {
     // ✅ Crear contacto (vCard)
     const vcard = `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${formDataNFC.value.nombre}\r\nTEL:${formDataNFC.value.telefono_detalle}\r\nEND:VCARD`;
@@ -493,8 +499,8 @@ async function escribir() {
 
   // 🔄 Intentar escribir
   try {
-    const ndef = new NDEFReader();
-    await ndef.write({ records: [record] });
+    //const ndef = new NDEFReader();
+    //await ndef.write({ records: [record] });
 
     // ✅ Éxito
     loadingEvento.value = false;
