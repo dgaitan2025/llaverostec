@@ -488,7 +488,7 @@ async function escribir() {
   } catch (err) {
     console.error("❌ Error escribiendo NFC:", err);
     dialogState.value = "error";
-    dialogMessage.value = "No se pudo grabar la etiqueta NFC.";
+    dialogMessage.value = "No se pudo grabar la etiqueta NFC. " + err;
     return { ok: false, error: err.message };
   } finally {
     loadingEvento.value = false;
