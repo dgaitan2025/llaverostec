@@ -463,27 +463,37 @@ async function escribir() {
   // 🧩 Crear registro según tipo de grabado
   let record;
   if (formDataNFC.value.id_tipo_grabado === 1) {
-    // ✅ Validar URL
-    const link = formDataNFC.value.link?.trim();
-    console.log("Link a grabar ", link)
-    if (!link) {
-      loadingEvento.value = false;
-      dialogState.value = "error";
-      dialogMessage.value = "Debe ingresar una URL válida.";
-      return { ok: false, error: "URL vacía" };
-    }
+  const link = formDataNFC.value.link?.trim();
 
+  if (!link) {
+    loadingEvento.value = false;
+    dialogState.value = "error";
+    dialogMessage.value = "Debe ingresar una URL válida.";
+    return { ok: false, error: "URL vacía" };
+  }
+
+  try {
+    if (!("NDEFReader" in window)) {
+      throw new Error("Este navegador no soporta NFC.");
+    }
 
     const ndef = new NDEFReader();
-    try {
-      await ndef.write({
-        records: [{ recordType: "url", data: link }]
-      });
-      alert("URL escrita en la etiqueta.");
-    } catch (err) {
-      console.error("Error escribiendo NFC:", err);
-    }
-  } else if (formDataNFC.value.id_tipo_grabado === 2) {
+    await ndef.write({
+      records: [{ recordType: "url", data: link }]
+    });
+
+    dialogState.value = "success";
+    dialogMessage.value = "✅ URL escrita correctamente en la etiqueta.";
+    return { ok: true };
+  } catch (err) {
+    console.error("❌ Error escribiendo NFC:", err);
+    dialogState.value = "error";
+    dialogMessage.value = "No se pudo grabar la etiqueta NFC.";
+    return { ok: false, error: err.message };
+  } finally {
+    loadingEvento.value = false;
+  }
+} else if (formDataNFC.value.id_tipo_grabado === 2) {
     // ✅ Crear contacto (vCard)
     const vcard = `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${formDataNFC.value.nombre}\r\nTEL:${formDataNFC.value.telefono_detalle}\r\nEND:VCARD`;
     record = {
