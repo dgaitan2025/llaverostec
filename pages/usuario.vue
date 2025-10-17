@@ -21,7 +21,7 @@
       <!-- Campos condicionales -->
 
       <div v-if="formDataNFC.id_tipo_grabado === 1">
-        <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url" :rules="[v => !!v || 'La URL es obligatoria']"></v-text-field>
+        <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url" :rules="[v => !!v || 'La URL es obligatoria', , v => esURLValida(v) || 'URL válida invalida, falta http: o https:']"></v-text-field>
       </div>
 
       <div v-else-if="formDataNFC.id_tipo_grabado === 2">
@@ -229,6 +229,16 @@ onMounted(() => {
   }
 })
 
+function esURLValida(valor) {
+  if (!valor) return false;
+  try {
+    const url = new URL(valor);
+    // opcional: validar que tenga protocolo http o https
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 
 // Función para rotar

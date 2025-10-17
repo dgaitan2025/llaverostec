@@ -448,8 +448,8 @@ const handleMenuClick = async (item) => {
 async function escribir() {
   dialogEvento.value = true;
   loadingEvento.value = true;
-  dialogState.value = "";
-  dialogMessage.value = "Aproximar la NFC";
+  dialogState.value = "Aproximar la NFC";
+  
   console.log("Link a grabar ", formDataNFC.value.link?.trim())
 
   // 🚫 Validar soporte NFC
@@ -461,57 +461,24 @@ async function escribir() {
   }
 
   // 🧩 Crear registro según tipo de grabado
-  let record;
+   let record;
   if (formDataNFC.value.id_tipo_grabado === 1) {
-  const link = formDataNFC.value.link?.trim();
-
-  if (!link) {
-    loadingEvento.value = false;
-    dialogState.value = "error";
-    dialogMessage.value = "Debe ingresar una URL válida.";
-    return { ok: false, error: "URL vacía" };
-  }
-
-  try {
-    if (!("NDEFReader" in window)) {
-      throw new Error("Este navegador no soporta NFC.");
-    }
-
-    const ndef = new NDEFReader();
-    await ndef.write({
-      records: [{ recordType: "url", data: link }]
-    });
-
-    dialogState.value = "success";
-    dialogMessage.value = "✅ URL escrita correctamente en la etiqueta.";
-    return { ok: true };
-  } catch (err) {
-    console.error("❌ Error escribiendo NFC:", err);
-    dialogState.value = "error";
-    dialogMessage.value = "No se pudo grabar la etiqueta NFC. " + err;
-    return { ok: false, error: err.message };
-  } finally {
-    loadingEvento.value = false;
-  }
-} else if (formDataNFC.value.id_tipo_grabado === 2) {
-    // ✅ Crear contacto (vCard)
+    record = { recordType: "url", data: formDataNFC.value.link };
+  } else if (formDataNFC.value.id_tipo_grabado === 2) {
     const vcard = `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${formDataNFC.value.nombre}\r\nTEL:${formDataNFC.value.telefono_detalle}\r\nEND:VCARD`;
+    const encoder = new TextEncoder();
     record = {
       recordType: "mime",
       mediaType: "text/vcard",
-      data: new TextEncoder().encode(vcard),
+      data: encoder.encode(vcard),
     };
   } else {
-    loadingEvento.value = false;
-    dialogState.value = "error";
-    dialogMessage.value = "Tipo de grabado inválido o no definido.";
-    return { ok: false, error: "Tipo de grabado inválido" };
+    return { ok: false, error: "Tipo de grabado inválido o no definido." };
   }
 
-  // 🔄 Intentar escribir
   try {
-    //const ndef = new NDEFReader();
-    //await ndef.write({ records: [record] });
+    const ndef = new NDEFReader();
+    await ndef.write({ records: [record] });
 
     // ✅ Éxito
     loadingEvento.value = false;
