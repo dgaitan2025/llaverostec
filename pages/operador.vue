@@ -198,11 +198,11 @@ const acciones = [
     valor: 'programar',
     fase: [5],
     funcion: async () => {
-      //const resultado = await escribir();
+      const resultado = await escribir();
 
-      //if (!resultado.ok) {
-      // return { ok: false, error: resultado.error }; // 🚫 Detiene el flujo
-      //}
+      if (!resultado.ok) {
+      return { ok: false, error: resultado.error }; // 🚫 Detiene el flujo
+      }
 
 
       await avanzarFaseOrden(formDataNFC.value.id_Detalle);
@@ -231,6 +231,7 @@ const acciones = [
   {
     label: '📦 Finalizar', valor: 'entregar', fase: [1],
     funcion: async () => {
+      await avanzarFaseOrden(formDataNFC.value.id_Detalle);
       //reiniciar formulario
       localStorage.removeItem("ordenPendiente")
       formDataNFC.value = {
@@ -261,6 +262,7 @@ const acciones = [
       loadingEvento.value = false
       dialogState.value = "success"
       dialogMessage.value = "Orden finalizada " + formDataNFC.value.id_orden
+      
        return { ok: true };
     }
   }
