@@ -463,6 +463,7 @@ async function escribir() {
   if (formDataNFC.value.id_tipo_grabado === 1) {
     // ✅ Validar URL
     const link = formDataNFC.value.link?.trim();
+    console.log("Link a grabar ", link)
     if (!link) {
       loadingEvento.value = false;
       dialogState.value = "error";
@@ -472,9 +473,8 @@ async function escribir() {
     
 
     record = {
-      recordType: "mime", // 👈 formato correcto
-      mediaType: "text/uri-list",
-      data: new TextEncoder().encode(link),
+      recordType: "url", // 👈 formato correcto
+      data: link,
     };
   } else if (formDataNFC.value.id_tipo_grabado === 2) {
     // ✅ Crear contacto (vCard)
