@@ -448,7 +448,8 @@ const handleMenuClick = async (item) => {
 async function escribir() {
   dialogEvento.value = true;
   loadingEvento.value = true;
-  dialogState.value = "Aproximar la NFC";
+  dialogState.value = "";
+  dialogMessage.value ="Aproxime la NFC para grabar"
   
   console.log("Link a grabar ", formDataNFC.value.link?.trim())
 

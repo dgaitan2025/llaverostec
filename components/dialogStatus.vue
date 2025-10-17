@@ -17,7 +17,7 @@
             :width="12"
             class="mb-4"
           />
-          <div class="dialog-text loading-text">Procesando...</div>
+          <div class="dialog-text loading-text">{{ message || "Procesando..." }}</div>
         </div>
       </transition>
 
