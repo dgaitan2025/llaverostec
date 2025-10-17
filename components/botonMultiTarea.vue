@@ -1,86 +1,132 @@
 <template>
-  <div class="text-center pa-4">
-    <v-btn
-      :color="colorBoton"
-      :disabled="botonDeshabilitado"
-      :loading="procesando"
-      @click="ejecutarAccionActual"
-      class="px-6"
-      prepend-icon="mdi-play-circle"
-    >
+  <div class="text-center pa-4 flex flex-col items-center gap-2">
+    <!-- Botón principal -->
+    <v-btn :color="colorBoton" :disabled="botonDeshabilitado" :loading="procesando" @click="ejecutarAccionActual"
+      class="px-6" prepend-icon="mdi-play-circle">
       {{ textoBoton }}
     </v-btn>
+
+
+
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
-// 📦 Props
 const props = defineProps({
   acciones: {
     type: Array,
-    required: true // [{ label, valor, funcion }]
+    required: true
   },
-  colorInicial: {
-    type: String,
-    default: 'primary'
+  faseActual: {
+    type: Number,
+    required: true
   },
-  colorFinal: {
-    type: String,
-    default: 'success'
-  }
+  colorInicial: { type: String, default: 'primary' },
+  colorFinal: { type: String, default: 'success' }
 })
 
-// 📤 Emits
 const emit = defineEmits(['accion-ejecutada', 'completado'])
 
-// 🧠 Estado interno
 const indiceActual = ref(0)
 const procesando = ref(false)
 const botonDeshabilitado = ref(false)
+const faseActualBoton = ref('')
 
-// 🧾 Computed: Texto dinámico
-const textoBoton = computed(() => {
-  if (botonDeshabilitado.value) return '✅ Finalizado'
-  return props.acciones[indiceActual.value]?.label || '✅ Finalizado'
-})
+// 🔹 Inicializa la fase actual
+const inicializarDesdeFase = () => {
+  const index = props.acciones.findIndex(a =>
+    Array.isArray(a.fase)
+      ? a.fase.includes(props.faseActual)
+      : a.fase === props.faseActual
+  )
+  indiceActual.value = index >= 0 ? index : 0
+  botonDeshabilitado.value = indiceActual.value >= props.acciones.length
+  faseActualBoton.value = props.acciones[indiceActual.value]?.valor || ''
+}
 
-// 🎨 Computed: Color del botón
-const colorBoton = computed(() => {
-  return botonDeshabilitado.value ? props.colorFinal : props.colorInicial
-})
+// Observa cambios en la fase actual
+watch(() => props.faseActual, inicializarDesdeFase, { immediate: true })
 
-// ▶️ Lógica principal
+// 🔹 Texto dinámico
+const textoBoton = computed(() =>
+  botonDeshabilitado.value
+    ? '✅ Finalizado'
+    : props.acciones[indiceActual.value]?.label || '✅ Finalizado'
+)
+
+// 🔹 Color dinámico
+const colorBoton = computed(() =>
+  botonDeshabilitado.value ? props.colorFinal : props.colorInicial
+)
+
+// ▶️ Ejecutar acción principal (detiene avance si falla)
 const ejecutarAccionActual = async () => {
-  if (indiceActual.value >= props.acciones.length || botonDeshabilitado.value) return
+  if (indiceActual.value >= props.acciones.length || botonDeshabilitado.value) return;
 
-  const accion = props.acciones[indiceActual.value]
-  procesando.value = true
+  const accion = props.acciones[indiceActual.value];
+  procesando.value = true;
 
   try {
-    if (typeof accion.funcion === 'function') {
-      await accion.funcion()
+    let resultado = { ok: true };
+
+    if (typeof accion.funcion === "function") {
+      resultado = await accion.funcion(); // 👈 puede devolver ok/error
     }
-    emit('accion-ejecutada', accion)
-  } catch (err) {
-    console.error('Error ejecutando acción:', err)
-  } finally {
-    procesando.value = false
-    indiceActual.value++
+
+    // 🚫 Si devuelve error, no avanzar
+    if (!resultado || resultado.ok === false) {
+      console.warn(`⚠️ Acción falló: ${resultado?.error || "Error desconocido"}`);
+
+
+      return; // 👈 Detiene el flujo
+    }
+
+    // ✅ Si todo bien, avanza
+    emit("accion-ejecutada", accion);
+    indiceActual.value++;
+    faseActualBoton.value = props.acciones[indiceActual.value]?.valor || "";
 
     if (indiceActual.value >= props.acciones.length) {
-      // 🚫 Bloquea el botón
-      botonDeshabilitado.value = true
-      emit('completado')
+      botonDeshabilitado.value = true;
+      emit("completado");
     }
+  } catch (e) {
+    console.error("❌ Error inesperado:", e);
+    alert(`Error crítico en "${accion.label}".`);
+  } finally {
+    procesando.value = false;
   }
-}
+};
+
 </script>
 
 <style scoped>
-.v-btn {
-  font-weight: bold;
-  transition: all 0.3s;
+.boton-opcion {
+  width: 180px;
+  /* ✅ Tamaño fijo */
+  height: 40px;
+  /* ✅ Misma altura */
+  font-weight: 600;
+  font-size: 15px;
+  border-width: 2px;
+  border-radius: 12px;
+  text-transform: none;
+  transition: all 0.25s ease-in-out;
+  margin-top: 10px;
+}
+
+/* ✨ Espaciado y efecto hover */
+.boton-opcion:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 🌈 Efecto al hacer clic */
+.boton-opcion:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
 }
 </style>

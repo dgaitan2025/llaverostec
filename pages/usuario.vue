@@ -9,24 +9,24 @@
       <h2 class="mt-4">Bienvenido {{ usuario.nickname }}</h2>
       <p>Aquí podrás crear tu llavero.</p>
     </div>
-
-    <div v-if="mostrarFormulario" class="pa-6 text-center">
+    <v-form ref="formNFC">
+    <div v-if="mostrarFormulario" class="pa-6 text-center" >
       <!-- Selector de tipo de dato -->
 
       <v-select v-model="formDataNFC.id_tipo_grabado" :items="[
         { text: 'URL', value: 1 },
         { text: 'Contacto', value: 2 },
 
-      ]" item-title="text" item-value="value" label="Grabador de NFC" />
+      ]" item-title="text" item-value="value" label="Grabador de NFC" :rules="[v => !!v || 'Selecciona un tipo de grabado']"/>
       <!-- Campos condicionales -->
 
       <div v-if="formDataNFC.id_tipo_grabado === 1">
-        <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url"></v-text-field>
+        <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url" :rules="[v => !!v || 'La URL es obligatoria']"></v-text-field>
       </div>
 
       <div v-else-if="formDataNFC.id_tipo_grabado === 2">
-        <v-text-field v-model="formDataNFC.nombre" label="Nombre"></v-text-field>
-        <v-text-field v-model="formDataNFC.telefono_detalle" label="Telefono"></v-text-field>
+        <v-text-field v-model="formDataNFC.nombre" label="Nombre" :rules="[v => !!v || 'El nombre es obligatorio']"></v-text-field>
+        <v-text-field v-model="formDataNFC.telefono_detalle" label="Telefono" :rules="[v => !!v || 'El teléfono es obligatorio']"></v-text-field>
       </div>
 
       <!-- Tomar Foto -->
@@ -105,36 +105,33 @@
         { text: 'Efectivo', value: 1 },
         { text: 'Transferencia', value: 2 },
         { text: 'Línea', value: 3 }
-      ]" item-title="text" item-value="value" label="Método de pago" />
+      ]" item-title="text" item-value="value" label="Método de pago" :rules="[v => !!v || 'Selecciona un método de pago']"/>
 
-      <v-select v-model="formDataNFC.entrega" :items="['Presencial', 'Domicilio']" label="Entrega" />
+      <v-select v-model="formDataNFC.entrega" :items="['Presencial', 'Domicilio']" label="Entrega" :rules="[v => !!v || 'Selecciona el tipo de entrega']"/>
 
       <div v-if="formDataNFC.entrega === 'Domicilio'">
 
-        <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre"></v-text-field>
-        <v-text-field v-model="formDataNFC.telefono" label="Telefono"></v-text-field>
-        <v-text-field v-model="formDataNFC.direccion_entrega" label="Direccion"></v-text-field>
+        <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre" :rules="[v => !!v || 'El nombre de entrega es obligatorio']"></v-text-field>
+        <v-text-field v-model="formDataNFC.telefono" label="Telefono" :rules="[v => !!v || 'El teléfono de entrega es obligatorio']"></v-text-field>
+        <v-text-field v-model="formDataNFC.direccion_entrega" label="Direccion" :rules="[v => !!v || 'La dirección es obligatoria']"></v-text-field>
       </div>
 
 
 
 
 
-      <v-btn color="primary" size="small" class="mt-4" @click="guardarNFC">Solicitar</v-btn>
+      <v-btn color="primary" size="small" class="mt-4" @click="validarFormulario">Solicitar</v-btn>
     </div>
+    </v-form>
 
-  <div v-if="mostrarCardFinalizados" class="pa-6 text-center">
-    <CardGrabado :grabados="listaGrabados" />
-  </div>
+    <div v-if="mostrarCardFinalizados" class="pa-6 text-center">
+      <CardGrabado :grabados="listaGrabados" />
+    </div>
 
     <!-- dasboard -->
 
     <div v-if="mostrardashboard" class="pa-6 text-center">
-      <OrdenCard
-      v-for="item in ordenes"
-      :key="item.id_Orden"
-      :orden="item"
-    />
+      <OrdenCard v-for="item in ordenes" :key="item.id_Orden" :orden="item" />
 
     </div>
 
@@ -166,7 +163,7 @@ import { previewPhoto } from "../utils/stickers"
 import { UrlWithApiRD, ENDPOINTS } from "../Service/apiConfig"
 import dialogStatus from "../components/dialogStatus.vue"
 import html2canvas from "html2canvas";
-import { startConnection, on } from "../utils/signalr";
+import { startConnection, on,connection } from "../utils/signalr";
 import { watch } from "vue"
 import OrdenCard from "../components/cardDash.vue"
 import { ordenCliente } from "../utils/API_ordenes"
@@ -178,21 +175,29 @@ const ordenes = ref([])
 let connectionListener = null;
 
 onMounted(async () => {
+  // 👉 Define el listener
   connectionListener = async (payload) => {
     console.log("📡 Datos recibidos:", payload);
     ordenes.value = await ordenCliente(usuario.value.usuarioId);
   };
 
+  // 👉 Registra el evento antes de conectar
   on("RecibirSaludo", connectionListener);
+
+  // 👉 Inicia la conexión (espera a que esté lista)
   await startConnection();
 });
 
 onUnmounted(() => {
-  // elimina el listener cuando el componente se destruye
-  if (connectionListener) {
-    connection.off("RecibirSaludo", connectionListener);
+  try {
+    if (connection?.off && connectionListener) {
+      connection.off("RecibirSaludo", connectionListener);
+      console.log("🧹 Listener eliminado correctamente");
+    }
+  } catch (err) {
+    console.warn("⚠️ No se pudo eliminar el listener SignalR:", err);
+  } finally {
     connectionListener = null;
-    console.log("🧹 Listener eliminado correctamente");
   }
 });
 
@@ -278,8 +283,8 @@ const formDataNFC = ref({
       cantidad: 1,
       precio: 50,
       subtotal: 50,
-      foto_anverso: "",
-      foto_reverso: "",
+      foto_anverso: null,
+      foto_reverso: null,
       link: "",
       texto: "No valido",
       id_tipo_grabado: 0,
@@ -304,7 +309,40 @@ function getFechaActual() {
   return `${año}-${mes}-${dia}`
 }
 
+  const formNFC = ref(null);
+
+const validarFormulario = async () => {
+  dialogEvento.value = true
+  loadingEvento.value = true
+  dialogState.value = ""
+  dialogMessage.value = ""
+  const { valid } = await formNFC.value.validate();
+
+  if (!valid) {
+    console.warn("❌ Faltan campos obligatorios");
+    loadingEvento.value = false
+    dialogState.value = "error";
+    dialogMessage.value = "Por favor, completa todos los campos requeridos.";
+    cierre.value = 2000
+    return;
+  }
+
+  if (!formDataNFC.value.foto_anverso || !formDataNFC.value.foto_reverso) {
+    loadingEvento.value = false
+    dialogState.value = "error";
+    dialogMessage.value = "Debes subir ambas fotografías (anverso y reverso).";
+    cierre.value = 2000
+    return;
+  }
+
+  
+
+  guardarNFC()
+}
+
 const guardarNFC = async () => {
+
+
 
   dialogEvento.value = true
   loadingEvento.value = true
@@ -339,6 +377,8 @@ const guardarNFC = async () => {
       }])
     }
 
+    console.log("Datos de la orden a enviar ", orden)
+
 
     const response = await fetch(UrlWithApiRD(ENDPOINTS.crearOrden), {
       method: "POST",
@@ -359,6 +399,7 @@ const guardarNFC = async () => {
       dialogState.value = "error"
       dialogMessage.value = "Error al crear la orden"
       cierre.value = 2000
+      return
     }
 
 
@@ -372,16 +413,33 @@ const guardarNFC = async () => {
     // 2️⃣ Resetear campos
     formDataNFC.value = {
 
-      textUrl: "",
+      id_Usuario: 0,
+  id_Tipo_Pago: 0,
+  fecha: getFechaActual(), // siempre formato YYYY-MM-DD
+  total: 10,
+  persona_Entregar: "",
+  direccion_entrega: "",
+  telefono: "",
+  estado: 1,
+  entrega_domicilio: false,
+
+
+  detalles: JSON.stringify([
+    {
+      id_articulo: 1,
+      cantidad: 1,
+      precio: 50,
+      subtotal: 50,
+      foto_anverso: null,
+      foto_reverso: null,
+      link: "",
+      texto: "No valido",
+      id_tipo_grabado: 0,
       nombre: "",
-      telefono: "",
-      tipoPago: "",
-      entrega: "",
-      nombreRecive: "",
-      telefonoRecive: "",
-      direccionResive: "",
-      fotografia: null,
-      fotografia2: null,
+      telefono_detalle: 0,
+
+    }
+  ])
     }
 
     // 3️⃣ Limpiar preview/canvas
@@ -471,7 +529,7 @@ const usuario = ref({
 
 
 
-async function handleMenuClick (item) {
+async function handleMenuClick(item) {
   if (item.value === "exit") {
     const sesion = useCookie("token")
     sesion.value = null
@@ -479,23 +537,62 @@ async function handleMenuClick (item) {
     router.push("/login")
   } else if (item.value === "shared") {
     mostrarCardFinalizados.value = false;
-    mostrardashboard.value = false; 
+    mostrardashboard.value = false;
     mostrarFormulario.value = true   // 👈 activa el formulario
   }
   else if (item.value === "dashboard") {
     //conectar()
+    dialogEvento.value = true
+    loadingEvento.value = true
+    dialogState.value = ""
+    dialogMessage.value = ""
+
     mostrarFormulario.value = false
     mostrarCardFinalizados.value = false
-    
-    ordenes.value= await ordenCliente(usuario.value.usuarioId)
-    console.log(ordenes.value)
-    
-    
-    mostrardashboard.value = true   // 👈 activa el formulario
-  } else if(item.value === "myfiles") {
+
+    ordenes.value = await ordenCliente(usuario.value.usuarioId)
+
+    if (Array.isArray(ordenes.value) && ordenes.value.length > 0) {
+      loadingEvento.value = false;
+      dialogState.value = "success";
+      dialogMessage.value = "Órdenes encontradas: " + ordenes.value.length;
+      cierre.value = 2000;
+      mostrardashboard.value = true;
+    } else {
+      loadingEvento.value = false;
+      dialogState.value = "error";
+      dialogMessage.value = "No tiene órdenes finalizadas";
+      cierre.value = 2000;
+      mostrardashboard.value = false;
+    }
+
+
+
+
+  } else if (item.value === "myfiles") {
+    dialogEvento.value = true
+    loadingEvento.value = true
+    dialogState.value = ""
+    dialogMessage.value = ""
+
     mostrardashboard.value = false
     mostrarFormulario.value = false
     const resultado = await obtenerOrdenFinalizadas(usuario.value.usuarioId);
+
+    if (Array.isArray(resultado) && resultado.length > 0) {
+      loadingEvento.value = false
+      dialogState.value = "success"
+      dialogMessage.value = "Orden encontradas: " + resultado.length
+      cierre.value = 2000;
+      mostrarCardFinalizados.value = true;
+    } else {
+
+      loadingEvento.value = false
+      dialogState.value = "error"
+      dialogMessage.value = "No Tiene ordenes finalizadas"
+      cierre.value = 2000;
+      mostrarCardFinalizados.value = false;
+    }
     console.log("Datos finalizados", resultado);
 
     // Asigna al ref (no lo redeclares con const)

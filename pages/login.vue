@@ -200,13 +200,6 @@ const onCerrarCamara = () => {
     cerrarCamara(dialog)
 }
 
-async function Verificar() {
-
-    console.log("Foto 1", formData.value.FotografiaBase64)
-    console.log("Foto 2", usuarioLogueado.value.fotografia)
-    const datos = await VerificarRostro(formData.value.FotografiaBase64, usuarioLogueado.value.fotografia)
-    return datos
-}
 
 
 /*
@@ -303,19 +296,22 @@ const onTomarFoto = async () => {
         const data = await response.json()
         console.log("Respuesta API:", data)
 
-
-        if (response.ok && data.estaActivo) {
-            localStorage.setItem("usuario", JSON.stringify(data))
+        if(!data.success){
+            loadingEvento.value = false
+            dialogState.value = "error";
+            dialogMessage.value = data.message;
+        }else if (response.ok && data.usuario.estaActivo) {
+            localStorage.setItem("usuario", JSON.stringify(data.usuario))
             const token = useCookie("token")
-            token.value = JSON.stringify({ nickname: data.token })
+            token.value = JSON.stringify({ nickname: data.usuario.token })
             loadingEvento.value = false
             dialogState.value = "success"
-            dialogMessage.value = "Bienvenido " + data.nickname
+            dialogMessage.value = "Bienvenido " + data.usuario.nickname
 
             // Redirigir según el rol
-            if (data.rolId === 4) {
+            if (data.usuario.rolId === 4) {
                 router.push("/usuario")
-            } else if (data.rolId === 5) {
+            } else if (data.usuario.rolId === 5) {
                 router.push("/operador")
             } else {
                 navigateTo('/') // fallback

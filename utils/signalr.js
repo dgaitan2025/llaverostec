@@ -57,3 +57,5 @@ export async function stopConnection() {
     console.log("🧹 Conexión SignalR detenida");
   }
 }
+
+export { connection };

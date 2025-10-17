@@ -11,13 +11,7 @@
 
     <!-- Formulario NFC -->
     <div v-if="mostrarFormulario" class="pa-6 text-center">
-      <div>
-        <OrdenCard
-      v-for="item in ordenes"
-      :key="item.id_Orden"
-      :orden="item"
-    />
-      </div>
+
 
       <v-select class="mt-4" v-model="formDataNFC.id_tipo_grabado" :items="[
         { text: 'URL', value: 1 },
@@ -77,11 +71,13 @@
         <v-btn color="primary" size="small" class="mt-2" @click="rotarImagen2">Rotar</v-btn>
       </div>
 
-      <BotonSecuencial :acciones="acciones" reiniciar @accion-ejecutada="accionEjecutada"
-        @completado="flujoCompletado" />
+      <BotonSecuencial :acciones="acciones" :fase-actual="formDataNFC?.fase_actual" />
+
 
     </div>
   </Sidebar>
+
+
 
   <!-- Foto ampliada -->
   <v-dialog v-model="dialogFoto" max-width="500">
@@ -94,6 +90,28 @@
   </v-dialog>
 
   <PiePagina />
+
+  <v-dialog v-model="dialogQA" max-width="400" persistent>
+    <v-card class="pa-6 text-center">
+      <v-card-title class="text-h6 font-weight-bold">
+        Control de Calidad
+      </v-card-title>
+
+      <v-card-text>
+        ¿El producto pasó el control de calidad?
+      </v-card-text>
+
+      <v-card-actions class="justify-center gap-4">
+        <v-btn color="success" variant="elevated" @click="seleccionarResultadoQA(true)">
+          ✅ Funcional
+        </v-btn>
+        <v-btn color="error" variant="elevated" @click="seleccionarResultadoQA(false)">
+          ❌ No funcional
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
 
   <dialogStatus v-model="dialogEvento" :loading="loadingEvento" :state="dialogState" :message="dialogMessage"
     :auto-close="3000" />
@@ -119,16 +137,35 @@ const dialogMessage = ref("")
 const ordenes = ref([])
 const loading = ref(false)
 
+// 🔹 Estado del modal QA
+const dialogQA = ref(false)
+const resolverQA = ref(null)
+
+// 🔹 Mostrar el modal y esperar la respuesta (true / false)
+const mostrarModalQA = () => {
+  dialogQA.value = true
+  return new Promise((resolve) => {
+    resolverQA.value = resolve
+  })
+}
+
+// 🔹 Cuando el usuario hace clic en Funcional o No funcional
+const seleccionarResultadoQA = (resultado) => {
+  dialogQA.value = false
+  if (resolverQA.value) resolverQA.value(resultado)
+}
+
+
 onMounted(async () => {
   // registra el listener antes de conectar
   on("RecibirSaludo", async (payload) => {
     console.log("📡 Datos recibidos:", payload);
     ordenes.value = {
-    id: payload.orden,
-    estado: payload.estado,
-    avance: payload.avance,
-    pasoActual: payload.pasoActual,
-  }
+      id: payload.orden,
+      estado: payload.estado,
+      avance: payload.avance,
+      pasoActual: payload.pasoActual,
+    }
   });
 
   // inicia conexión
@@ -142,76 +179,130 @@ const avance = ref(0);
 
 const acciones = [
   {
-    label: 'Imprimir,recorte y armado',
-    valor: 'imprimir',
+    label: '🖨️ Imprimir', valor: 'imprimir', fase: [3, 4],
     funcion: async () => {
+      const resultado = imprimirFotos();
+
+      if (!resultado.ok) {
+        return { ok: false, error: resultado.error };
+      }
+
       await avanzarFaseOrden(formDataNFC.value.id_Detalle);
-      imprimirFotos()
-      await new Promise(r => setTimeout(r, 5000))
+      await new Promise(r => setTimeout(r, 1000));
+
+      return { ok: true };
     }
   },
   {
     label: '📅 Programar',
     valor: 'programar',
+    fase: [5],
     funcion: async () => {
-      await avanzarFaseOrden(formDataNFC.value.id_Detalle);
-      escribir()
-      await new Promise(r => setTimeout(r, 1000))
+      //const resultado = await escribir();
 
+      //if (!resultado.ok) {
+      // return { ok: false, error: resultado.error }; // 🚫 Detiene el flujo
+      //}
+
+
+      await avanzarFaseOrden(formDataNFC.value.id_Detalle);
+      await new Promise(r => setTimeout(r, 1000));
+      return { ok: true }; // ✅ Avanza al siguiente paso
     }
   },
   {
-    label: '🧪 Probar',
+    label: 'Control de calidad',
     valor: 'probar',
+    fase: [6],
     funcion: async () => {
-      await avanzarFaseOrden(formDataNFC.value.id_Detalle);
-      console.log('Probando...')
-      await new Promise(r => setTimeout(r, 1000))
-      alert('Prueba completada 🚀')
+      // Mostrar el modal y esperar selección
+      const resultado = await mostrarModalQA();
+
+      if (resultado) {
+        await avanzarFaseOrden(formDataNFC.value.id_Detalle);
+        return { ok: true };
+      } else {
+        
+        
+        return { ok: false, error: 'Producto no funcional' };
+      }
     }
   },
   {
-    label: '📦 Entregar',
-    valor: 'entregar',
+    label: '📦 Finalizar', valor: 'entregar', fase: [1],
     funcion: async () => {
-      await avanzarFaseOrden(formDataNFC.value.id_Detalle);
-      await new Promise(r => setTimeout(r, 1000))
+      //reiniciar formulario
+      localStorage.removeItem("ordenPendiente")
+      formDataNFC.value = {
+        tipoNFC: "",
+        textUrl: "",
+        id_orden: "",
+        fase: "",
+        barraAvance: "",
+        link: "",
+        nombre: "",
+        telefono_detalle: "",
+        foto_anverso: "",
+        foto_reverso: "",
+        id_tipo_grabado: null,
+        id_Detalle: 0,
+        fase_actual: 0,
+        domicilio: 0,
+      };
+      mostrarFormulario.value = false
+      dialogEvento.value = true
+      loadingEvento.value = true
+      dialogState.value = ""
+      dialogMessage.value = ""
+
+      //await avanzarFaseOrden(formDataNFC.value.id_Detalle);
+      await new Promise(r => setTimeout(r, 500))
+
+      loadingEvento.value = false
+      dialogState.value = "success"
+      dialogMessage.value = "Orden finalizada " + formDataNFC.value.id_orden
+       return { ok: true };
     }
   }
 ]
 
-const accionEjecutada = (accion) => {
-  console.log('✅ Acción ejecutada:', accion.valor)
-}
-
-const flujoCompletado = () => {
-  console.log('🎉 Todas las acciones completadas')
-  alert('Proceso finalizado 🎉')
-}
-
-
 const imprimirFotos = () => {
-  const anverso = formDataNFC.value.foto_anverso
-  const reverso = formDataNFC.value.foto_reverso
+  try {
+    const anverso = formDataNFC.value.foto_anverso;
+    const reverso = formDataNFC.value.foto_reverso;
 
-  if (!anverso || !reverso) {
-    alert("Faltan fotos. Asegúrate de cargar Anverso y Reverso.")
-    return
+    // 🚫 Validar que ambas fotos existan
+    if (!anverso || !reverso) {
+      alert("⚠️ Faltan fotos. Asegúrate de cargar Anverso y Reverso.");
+      return { ok: false, error: "Faltan fotos para imprimir." };
+    }
+
+    // 🧩 Generar HTML de impresión
+    const html = generarHtmlImpresion({
+      anverso: `data:image/png;base64,${anverso}`,
+      reverso: `data:image/png;base64,${reverso}`,
+      rotationDegFront: rotation.value || 0,
+      rotationDegBack: rotation2.value || 0,
+      titulo: "Carnet – Llavero",
+    });
+
+    // 🖨️ Abrir ventana e imprimir
+    const w = window.open("", "_blank");
+    if (!w) {
+      return { ok: false, error: "El navegador bloqueó la ventana emergente." };
+    }
+
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+
+    return { ok: true }; // ✅ Éxito
+  } catch (err) {
+    console.error("❌ Error al imprimir:", err);
+    return { ok: false, error: err.message || "Error al imprimir las fotos." };
   }
+};
 
-  const html = generarHtmlImpresion({
-    anverso: `data:image/png;base64,${anverso}`,
-    reverso: `data:image/png;base64,${reverso}`,
-    rotationDegFront: rotation.value || 0,
-    rotationDegBack: rotation2.value || 0,
-    titulo: "Carnet – Llavero"
-  })
-
-  const w = window.open("", "_blank")
-  w.document.open()
-  w.document.write(html)
-  w.document.close()
-}
 
 const dialog = ref(false)
 const dialogFoto = ref(false)
@@ -247,7 +338,9 @@ const formDataNFC = ref({
   foto_reverso: "",
   id_tipo_grabado: null,
   id_Detalle: 0,
+  fase_actual: 0,
   domicilio: 0,
+
 })
 
 // 🔹 Restaurar datos del localStorage
@@ -335,12 +428,13 @@ const handleMenuClick = async (item) => {
 
     orden.value = formDataNFC.value.id_orden
     console.log("✅ Datos de orden:", ordenPendiente.value)
+    console.log("Valor de fase ", formDataNFC.value.fase_actual)
 
     // Mostrar formulario
     loadingEvento.value = false
     dialogState.value = "success"
     dialogMessage.value = "Orden " + formDataNFC.value.id_orden
-    loadingEvento.value = false
+
     mostrarFormulario.value = true
   } else {
     mostrarFormulario.value = false
@@ -349,29 +443,54 @@ const handleMenuClick = async (item) => {
 
 // 🔹 Escritura NFC
 async function escribir() {
+  dialogEvento.value = true;
+  loadingEvento.value = true;
+  dialogState.value = "";
+  dialogMessage.value = "Aproximar la NFC";
+
+  // 🚫 Validar soporte
   if (!("NDEFReader" in window)) {
-    alert("❌ Este dispositivo o navegador no soporta NFC.")
-    return
+    loadingEvento.value = false;
+    dialogState.value = "error";
+    dialogMessage.value = "Este dispositivo o navegador no soporta NFC.";
+    return { ok: false, error: "Navegador no soporta NFC" }; // 👈 devuelve error
   }
 
-  let record
+  // 🧩 Crear el registro según tipo
+  let record;
   if (formDataNFC.value.id_tipo_grabado === 1) {
-    record = { recordType: "url", data: formDataNFC.value.link }
+    record = { recordType: "url", data: formDataNFC.value.link };
   } else if (formDataNFC.value.id_tipo_grabado === 2) {
-    const vcard = `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${formDataNFC.value.nombre}\r\nTEL:${formDataNFC.value.telefono_detalle}\r\nEND:VCARD`
-    const encoder = new TextEncoder()
-    record = { recordType: "mime", mediaType: "text/vcard", data: encoder.encode(vcard) }
+    const vcard = `BEGIN:VCARD\r\nVERSION:3.0\r\nFN:${formDataNFC.value.nombre}\r\nTEL:${formDataNFC.value.telefono_detalle}\r\nEND:VCARD`;
+    const encoder = new TextEncoder();
+    record = {
+      recordType: "mime",
+      mediaType: "text/vcard",
+      data: encoder.encode(vcard),
+    };
+  } else {
+    return { ok: false, error: "Tipo de grabado inválido o no definido." };
   }
 
   try {
-    const ndef = new NDEFReader()
-    await ndef.write({ records: [record] })
-    alert("✅ NFC grabado correctamente.")
+    const ndef = new NDEFReader();
+    await ndef.write({ records: [record] });
+
+    // ✅ Éxito
+    loadingEvento.value = false;
+    dialogState.value = "success";
+    dialogMessage.value = "NFC grabado correctamente.";
+
+    return { ok: true };
   } catch (err) {
-    console.error(err)
-    alert("⚠️ Error al escribir: " + err)
+    console.error("⚠️ Error al escribir NFC:", err);
+    loadingEvento.value = false;
+    dialogState.value = "error";
+    dialogMessage.value = "Error al grabar NFC.";
+    return { ok: false, error: err.message || "Error al grabar NFC" }; // 👈 devuelve error
   }
 }
+
 
 async function avanzarFaseOrden(idDetalle) {
   const result = await actualizarEstadoOrden(idDetalle);

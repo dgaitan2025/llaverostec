@@ -31,6 +31,7 @@ export async function obtenerOrdenPendiente(operadorId) {
       id_tipo_grabado: data.tipo_Grabado === "URL" ? 1 : 2,
       id_orden: data.id_Orden,
       id_Detalle: data.id_Detalle,
+      fase_actual: data.fase_actual,
       domicilio: data.entrega_domicilio,
     }
 
