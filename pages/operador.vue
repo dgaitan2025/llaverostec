@@ -72,6 +72,7 @@
       </div>
 
       <BotonSecuencial :acciones="acciones" :fase-actual="formDataNFC?.fase_actual" />
+      <v-btn color="primary" size="small" class="mt-2" @click="escribir">Grabar</v-btn>
 
 
     </div>
