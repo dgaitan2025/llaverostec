@@ -72,7 +72,7 @@
       </div>
 
       <BotonSecuencial :acciones="acciones" :fase-actual="formDataNFC?.fase_actual" />
-      <v-btn color="primary" size="small" class="mt-2" @click="escribir">Grabar</v-btn>
+      
 
 
     </div>
@@ -113,6 +113,33 @@
     </v-card>
   </v-dialog>
 
+  <v-dialog v-model="visible" max-width="450" persistent>
+    <v-card class="pa-6">
+      <v-card-title class="text-h6 font-weight-bold text-center">
+        Motivo del Rechazo
+      </v-card-title>
+
+      <v-form ref="formRechazo" v-model="formValido">
+        <v-card-text>
+          <!-- Radios requeridos -->
+          <v-radio-group v-model="opcionSeleccionada" :rules="[v => !!v || 'Debes seleccionar un motivo']"
+            label="Selecciona el tipo de rechazo" class="mb-4">
+            <v-radio label="Impresión" value="Impresión" color="primary" />
+            <v-radio label="Programación QR" value="Programación" color="secondary" />
+          </v-radio-group>
+
+          <!-- Comentario obligatorio -->
+          <v-textarea v-model="comentario" label="Comentario" placeholder="Describe brevemente el problema..."
+            :rules="[v => !!v?.trim() || 'El comentario es obligatorio']" rows="3" auto-grow clearable />
+        </v-card-text>
+
+        <v-card-actions class="justify-center mt-3">
+          <v-btn color="primary" variant="flat" @click="confirmar">Confirmar</v-btn>
+          <v-btn text color="grey" @click="cancelar">Cancelar</v-btn>
+        </v-card-actions>
+      </v-form>
+    </v-card>
+  </v-dialog>
 
   <dialogStatus v-model="dialogEvento" :loading="loadingEvento" :state="dialogState" :message="dialogMessage"
     :auto-close="3000" />
@@ -124,10 +151,9 @@ import PiePagina from "../components/piePagina.vue"
 import { ref, onMounted } from "vue"
 import { useRouter } from "vue-router"
 import { abrirCamara, cerrarCamara, tomarFoto } from "../utils/camara"
-import { previewPhoto } from "../utils/stickers"
 import { generarHtmlImpresion } from "../utils/imprimir"
 import BotonSecuencial from "../components/botonMultiTarea.vue"
-import { obtenerOrdenPendiente } from "../utils/API_ordenes"
+import { obtenerOrdenPendiente,registrarFaseQA } from "../utils/API_ordenes"
 import dialogStatus from "../components/dialogStatus.vue"
 import OrdenCard from "../components/cardDash.vue"
 
@@ -138,9 +164,49 @@ const dialogMessage = ref("")
 const ordenes = ref([])
 const loading = ref(false)
 
+const visible = ref(false);
+const formRechazo = ref(null);
+const formValido = ref(false);
+const opcionSeleccionada = ref(null);
+const comentario = ref("");
+let resolver = null; // para resolver la promesa
+
 // 🔹 Estado del modal QA
 const dialogQA = ref(false)
 const resolverQA = ref(null)
+
+// ✅ Método que se exporta para abrir el modal y esperar resultado
+const mostrarModalRechazo = () => {
+  visible.value = true;
+  return new Promise((resolve) => {
+    resolver = resolve;
+  });
+};
+
+async function confirmar() {
+  const valido = await formRechazo.value.validate();
+  if (!valido.valid) return;
+
+  const resultado = {
+    motivo: opcionSeleccionada.value,
+    comentario: comentario.value.trim(),
+  };
+
+  resolver?.(resultado); // devuelve datos al que abrió el modal
+  cerrar();
+}
+
+function cancelar() {
+  resolver?.(null); // devuelve null si cancela
+  cerrar();
+}
+
+function cerrar() {
+  visible.value = false;
+  opcionSeleccionada.value = null;
+  comentario.value = "";
+  formRechazo.value?.resetValidation();
+}
 
 // 🔹 Mostrar el modal y esperar la respuesta (true / false)
 const mostrarModalQA = () => {
@@ -149,6 +215,8 @@ const mostrarModalQA = () => {
     resolverQA.value = resolve
   })
 }
+
+
 
 // 🔹 Cuando el usuario hace clic en Funcional o No funcional
 const seleccionarResultadoQA = (resultado) => {
@@ -216,17 +284,51 @@ const acciones = [
     valor: 'probar',
     fase: [6],
     funcion: async () => {
-      // Mostrar el modal y esperar selección
-      const resultado = await mostrarModalQA();
 
-      if (resultado) {
-        await avanzarFaseOrden(formDataNFC.value.id_Detalle);
-        return { ok: true };
-      } else {
+      try {
+        // Mostrar el modal y esperar selección
+        const resultado = await mostrarModalQA();
+
+        if (resultado) {
+          await avanzarFaseOrden(formDataNFC.value.id_Detalle);
+          return { ok: true };
+        } else {
+          const resultado = await mostrarModalRechazo()
+
+          if (resultado.motivo === "Impresión") {
+            await registrarFaseQA(
+              {idDetalle: formDataNFC.value.id_Detalle,
+                idFase: 4,
+                comentario: resultado.comentario})
+            console.log(formDataNFC.value.id_Detalle,resultado.comentario)
+
+            console.log("ingreso a la opcion de falla impresion")
+            await obtenerOrdenPendiente(usuario.value.usuarioId)
+            cargaOrden()
+
+          } else {
+            await registrarFaseQA({idDetalle: formDataNFC.value.id_Detalle,
+                idFase: 5,
+                comentario: resultado.comentario})
+
+            console.log("Ingreso a la opcion de programacion ")
+            await obtenerOrdenPendiente(usuario.value.usuarioId)
+            cargaOrden()
+          }
+
+          console.log("resultado del rechazo ", resultado)
 
 
-        return { ok: false, error: 'Producto no funcional' };
+          return { ok: false, error: 'Producto no funcional' };
+        }
+      } catch (err) {
+        console.error("Error al avanzar fase:", err.message);
+        dialogEvento.value = true
+        dialogState.value = "error";
+        dialogMessage.value = "No se pudo avanzar la fase.";
+        return { ok: false, error: 'fallo la integracion ' };
       }
+
     }
   },
   {
@@ -410,8 +512,8 @@ const handleMenuClick = async (item) => {
 
     // Llamar al backend para obtener orden pendiente
     ordenPendiente.value = await obtenerOrdenPendiente(usuario.value.usuarioId)
-    ordenes.value = await ordenCliente(usuario.value.usuarioId);
-    console.log("ordenes ", ordenes.value)
+    //ordenes.value = await ordenCliente(usuario.value.usuarioId);
+    //console.log("ordenes ", ordenes.value)
 
     // 🔍 Si no hay datos (null, undefined o vacío), cerrar el diálogo y salir
     if (!ordenPendiente.value) {
@@ -423,7 +525,20 @@ const handleMenuClick = async (item) => {
     }
 
     // Si hay datos, continuar con el flujo normal
-    const datosGuardados = localStorage.getItem("ordenPendiente")
+   cargaOrden()
+
+    // Mostrar formulario
+    loadingEvento.value = false
+    dialogState.value = "success"
+    dialogMessage.value = "Orden " + formDataNFC.value.id_orden
+    mostrarFormulario.value = true
+  } else {
+    mostrarFormulario.value = false
+  }
+}
+
+async function cargaOrden() {
+   const datosGuardados = localStorage.getItem("ordenPendiente")
     if (datosGuardados) {
       formDataNFC.value = JSON.parse(datosGuardados)
       console.log("📦 Datos form:", formDataNFC.value)
@@ -432,16 +547,7 @@ const handleMenuClick = async (item) => {
     orden.value = formDataNFC.value.id_orden
     console.log("✅ Datos de orden:", ordenPendiente.value)
     console.log("Valor de fase ", formDataNFC.value.fase_actual)
-
-    // Mostrar formulario
-    loadingEvento.value = false
-    dialogState.value = "success"
-    dialogMessage.value = "Orden " + formDataNFC.value.id_orden
-
-    mostrarFormulario.value = true
-  } else {
-    mostrarFormulario.value = false
-  }
+  
 }
 
 // 🔹 Escritura NFC
@@ -449,8 +555,8 @@ async function escribir() {
   dialogEvento.value = true;
   loadingEvento.value = true;
   dialogState.value = "";
-  dialogMessage.value ="Aproxime la NFC para grabar"
-  
+  dialogMessage.value = "Aproxime la NFC para grabar"
+
   console.log("Link a grabar ", formDataNFC.value.link?.trim())
 
   // 🚫 Validar soporte NFC
@@ -462,7 +568,7 @@ async function escribir() {
   }
 
   // 🧩 Crear registro según tipo de grabado
-   let record;
+  let record;
   if (formDataNFC.value.id_tipo_grabado === 1) {
     record = { recordType: "url", data: formDataNFC.value.link };
   } else if (formDataNFC.value.id_tipo_grabado === 2) {

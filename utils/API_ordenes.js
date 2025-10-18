@@ -69,20 +69,22 @@ export async function actualizarEstadoOrden(idDetalle) {
   try {
     const response = await fetch(UrlWithApiRD(ENDPOINTS.actualizarEstadoOrden), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(idDetalle) // 👈 el backend espera un entero en el cuerpo
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(idDetalle)
     });
 
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      const msg = `HTTP error! status: ${response.status}`;
+      throw new Error(msg);
+    }
 
     const data = await response.json();
-    console.log("Respuesta actualizar estado:", data);
+    console.log("✅ Respuesta actualizar estado:", data);
     return data;
   } catch (error) {
-    console.error("Error al actualizar estado:", error);
-    return null;
+    console.error("❌ Error al actualizar estado:", error);
+    // ⚠️ Lanza el error de nuevo para que el que llame lo pueda manejar
+    throw error;
   }
 }
 
@@ -112,5 +114,37 @@ export async function obtenerOrdenFinalizadas(usuarioId) {
     console.error("❌ Error al llamar API:", error)
     
     return null
+  }
+}
+
+export async function registrarFaseQA({ idDetalle, idFase, comentario }) {
+  const url = UrlWithApiRD(ENDPOINTS.qaRechazada); 
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        idDetalle,
+        idFase,
+        comentario,
+      }),
+    });
+
+    // Manejar error HTTP
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Error HTTP:", response.status, errorText);
+      throw new Error(`Error HTTP ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log("✅ QA registrada:", data);
+    return data;
+  } catch (error) {
+    console.error("❌ Error al registrar QA (fetch):", error);
+    throw error;
   }
 }
