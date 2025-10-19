@@ -313,7 +313,16 @@ const onTomarFoto = async () => {
                 router.push("/usuario")
             } else if (data.usuario.rolId === 5) {
                 router.push("/operador")
-            } else {
+            }else if (data.usuario.rolId === 6) {
+                router.push("/mostrador")
+            }else if (data.usuario.rolId === 3) {
+                router.push("/repartidor")
+            }else if (data.usuario.rolId === 1) {
+                router.push("/administrador")
+            }else if (data.usuario.rolId === 2) {
+                router.push("/supervisor")
+            }
+             else {
                 navigateTo('/') // fallback
             }
 

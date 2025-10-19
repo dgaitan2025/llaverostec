@@ -10,118 +10,127 @@
       <p>Aquí podrás crear tu llavero.</p>
     </div>
     <v-form ref="formNFC">
-    <div v-if="mostrarFormulario" class="pa-6 text-center" >
-      <!-- Selector de tipo de dato -->
+      <div v-if="mostrarFormulario" class="pa-6 text-center">
+        <!-- Selector de tipo de dato -->
 
-      <v-select v-model="formDataNFC.id_tipo_grabado" :items="[
-        { text: 'URL', value: 1 },
-        { text: 'Contacto', value: 2 },
+        <v-select v-model="formDataNFC.id_tipo_grabado" :items="[
+          { text: 'URL', value: 1 },
+          { text: 'Contacto', value: 2 },
 
-      ]" item-title="text" item-value="value" label="Grabador de NFC" :rules="[v => !!v || 'Selecciona un tipo de grabado']"/>
-      <!-- Campos condicionales -->
+        ]" item-title="text" item-value="value" label="Grabador de NFC"
+          :rules="[v => !!v || 'Selecciona un tipo de grabado']" />
+        <!-- Campos condicionales -->
 
-      <div v-if="formDataNFC.id_tipo_grabado === 1">
-        <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url" :rules="[v => !!v || 'La URL es obligatoria', , v => esURLValida(v) || 'URL válida invalida, falta http: o https:']"></v-text-field>
-      </div>
-
-      <div v-else-if="formDataNFC.id_tipo_grabado === 2">
-        <v-text-field v-model="formDataNFC.nombre" label="Nombre" :rules="[v => !!v || 'El nombre es obligatorio']"></v-text-field>
-        <v-text-field v-model="formDataNFC.telefono_detalle" label="Telefono" :rules="[v => !!v || 'El teléfono es obligatorio']"></v-text-field>
-      </div>
-
-      <!-- Tomar Foto -->
-      <v-select v-model="opcionFoto" :items="['Tomar Foto', 'Subir Archivo']" label="Fotografia Anverso"
-        prepend-icon="mdi-camera" @update:model-value="manejarSeleccionFoto" />
-
-      <v-dialog v-model="dialog" max-width="600" persistent>
-        <v-card>
-          <v-card-title>Tomar Foto</v-card-title>
-          <v-card-text>
-            <video ref="videoRef" autoplay playsinline style="width:100%; border-radius:8px;" />
-          </v-card-text>
-          <v-card-actions>
-            <v-btn color="green" @click="onTomarFoto">Capturar</v-btn>
-            <v-btn color="red" @click="onCerrarCamara">Cancelar</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
-      <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="mostrarPreview1" />
-
-      <!-- Primera foto -->
-      <div v-if="formDataNFC.foto_anverso" style="text-align:center; margin-top:8px;">
-        <!-- Marco fijo -->
-        <div ref="marcoFrontalRef"
-          style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
-          <!-- Imagen -->
-          <img :src="`data:image/png;base64,${formDataNFC.foto_anverso}`" :style="{
-            transform: `rotate(${rotation}deg)`,
-
-            objectFit: 'contain',
-            display: 'block',
-
-            width: rotation === 0 || rotation === 180 ? 'auto' : 'auto',
-
-            height: rotation === 0 || rotation === 180 ? '100%' : '100%'
-          }" />
+        <div v-if="formDataNFC.id_tipo_grabado === 1">
+          <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url"
+            :rules="[v => !!v || 'La URL es obligatoria', , v => esURLValida(v) || 'URL válida invalida, falta http: o https:']"></v-text-field>
         </div>
 
-        <!-- Botón para rotar -->
-        <v-btn color="primary" size="small" class="mt-4" @click="rotarImagen">
-          Rotar
-        </v-btn>
-      </div>
-
-      <!-- Segunda foto -->
-      <v-select v-model="opcionFoto2" :items="['Tomar Foto 2', 'Subir Archivo 2']" label="Fotografia Reverso"
-        prepend-icon="mdi-camera" @update:model-value="manejarSeleccionFoto" />
-
-      <input ref="fileInput2" type="file" accept="image/*" style="display:none" @change="mostrarPreview2" />
-
-      <div v-if="formDataNFC.foto_reverso" style="text-align:center; margin-top:8px;">
-        <!-- Marco fijo -->
-        <div ref="marcoReversoRef"
-          style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
-          <!-- Imagen -->
-          <img :src="`data:image/png;base64,${formDataNFC.foto_reverso}`" :style="{
-            transform: `rotate(${rotation2}deg)`,
-
-            objectFit: 'contain',
-            display: 'block',
-
-            width: rotation2 === 0 || rotation2 === 180 ? 'auto' : 'auto',
-
-            height: rotation2 === 0 || rotation2 === 180 ? '100%' : '100%'
-          }" />
+        <div v-else-if="formDataNFC.id_tipo_grabado === 2">
+          <v-text-field v-model="formDataNFC.nombre" label="Nombre"
+            :rules="[v => !!v || 'El nombre es obligatorio']"></v-text-field>
+          <v-text-field v-model="formDataNFC.telefono_detalle" label="Telefono"
+            :rules="[v => !!v || 'El teléfono es obligatorio']"></v-text-field>
         </div>
 
-        <!-- Botón para rotar -->
-        <v-btn color="primary" size="small" class="mt-4" @click="rotarImagen2">
-          Rotar
-        </v-btn>
+        <!-- Tomar Foto -->
+        <v-select v-model="opcionFoto" :items="['Tomar Foto', 'Subir Archivo']" label="Fotografia Anverso"
+          prepend-icon="mdi-camera" @update:model-value="manejarSeleccionFoto" />
+
+        <v-dialog v-model="dialog" max-width="600" persistent>
+          <v-card>
+            <v-card-title>Tomar Foto</v-card-title>
+            <v-card-text>
+              <video ref="videoRef" autoplay playsinline style="width:100%; border-radius:8px;" />
+            </v-card-text>
+            <v-card-actions>
+              <v-btn color="green" @click="onTomarFoto">Capturar</v-btn>
+              <v-btn color="red" @click="onCerrarCamara">Cancelar</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+        <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="mostrarPreview1" />
+
+        <!-- Primera foto -->
+        <div v-if="formDataNFC.foto_anverso" style="text-align:center; margin-top:8px;">
+          <!-- Marco fijo -->
+          <div ref="marcoFrontalRef"
+            style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+            <!-- Imagen -->
+            <img :src="`data:image/png;base64,${formDataNFC.foto_anverso}`" :style="{
+              transform: `rotate(${rotation}deg)`,
+
+              objectFit: 'contain',
+              display: 'block',
+
+              width: rotation === 0 || rotation === 180 ? 'auto' : 'auto',
+
+              height: rotation === 0 || rotation === 180 ? '100%' : '100%'
+            }" />
+          </div>
+
+          <!-- Botón para rotar -->
+          <v-btn color="primary" size="small" class="mt-4" @click="rotarImagen">
+            Rotar
+          </v-btn>
+        </div>
+
+        <!-- Segunda foto -->
+        <v-select v-model="opcionFoto2" :items="['Tomar Foto 2', 'Subir Archivo 2']" label="Fotografia Reverso"
+          prepend-icon="mdi-camera" @update:model-value="manejarSeleccionFoto" />
+
+        <input ref="fileInput2" type="file" accept="image/*" style="display:none" @change="mostrarPreview2" />
+
+        <div v-if="formDataNFC.foto_reverso" style="text-align:center; margin-top:8px;">
+          <!-- Marco fijo -->
+          <div ref="marcoReversoRef"
+            style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+            <!-- Imagen -->
+            <img :src="`data:image/png;base64,${formDataNFC.foto_reverso}`" :style="{
+              transform: `rotate(${rotation2}deg)`,
+
+              objectFit: 'contain',
+              display: 'block',
+
+              width: rotation2 === 0 || rotation2 === 180 ? 'auto' : 'auto',
+
+              height: rotation2 === 0 || rotation2 === 180 ? '100%' : '100%'
+            }" />
+          </div>
+
+          <!-- Botón para rotar -->
+          <v-btn color="primary" size="small" class="mt-4" @click="rotarImagen2">
+            Rotar
+          </v-btn>
+        </div>
+
+        <v-select v-model="formDataNFC.id_Tipo_Pago" :items="[
+          { text: 'Efectivo', value: 1 },
+          { text: 'Transferencia', value: 2 },
+
+        ]" item-title="text" item-value="value" label="Método de pago"
+          :rules="[v => !!v || 'Selecciona un método de pago']" />
+
+        <v-select v-model="formDataNFC.entrega" :items="['Presencial', 'Domicilio']" label="Entrega"
+          :rules="[v => !!v || 'Selecciona el tipo de entrega']" />
+
+        <div v-if="formDataNFC.entrega === 'Domicilio'">
+
+          <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre"
+            :rules="[v => !!v || 'El nombre de entrega es obligatorio']"></v-text-field>
+          <v-text-field v-model="formDataNFC.telefono" label="Telefono"
+            :rules="[v => !!v || 'El teléfono de entrega es obligatorio']"></v-text-field>
+          <v-text-field v-model="formDataNFC.direccion_entrega" label="Direccion"
+            :rules="[v => !!v || 'La dirección es obligatoria']"></v-text-field>
+        </div>
+
+
+
+
+
+        <v-btn color="primary" size="small" class="mt-4" @click="validarFormulario">Solicitar</v-btn>
       </div>
-
-      <v-select v-model="formDataNFC.id_Tipo_Pago" :items="[
-        { text: 'Efectivo', value: 1 },
-        { text: 'Transferencia', value: 2 },
-        { text: 'Línea', value: 3 }
-      ]" item-title="text" item-value="value" label="Método de pago" :rules="[v => !!v || 'Selecciona un método de pago']"/>
-
-      <v-select v-model="formDataNFC.entrega" :items="['Presencial', 'Domicilio']" label="Entrega" :rules="[v => !!v || 'Selecciona el tipo de entrega']"/>
-
-      <div v-if="formDataNFC.entrega === 'Domicilio'">
-
-        <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre" :rules="[v => !!v || 'El nombre de entrega es obligatorio']"></v-text-field>
-        <v-text-field v-model="formDataNFC.telefono" label="Telefono" :rules="[v => !!v || 'El teléfono de entrega es obligatorio']"></v-text-field>
-        <v-text-field v-model="formDataNFC.direccion_entrega" label="Direccion" :rules="[v => !!v || 'La dirección es obligatoria']"></v-text-field>
-      </div>
-
-
-
-
-
-      <v-btn color="primary" size="small" class="mt-4" @click="validarFormulario">Solicitar</v-btn>
-    </div>
     </v-form>
 
     <div v-if="mostrarCardFinalizados" class="pa-6 text-center">
@@ -163,7 +172,7 @@ import { previewPhoto } from "../utils/stickers"
 import { UrlWithApiRD, ENDPOINTS } from "../Service/apiConfig"
 import dialogStatus from "../components/dialogStatus.vue"
 import html2canvas from "html2canvas";
-import { startConnection, on,connection } from "../utils/signalr";
+import { startConnection, on, connection } from "../utils/signalr";
 import { watch } from "vue"
 import OrdenCard from "../components/cardDash.vue"
 import { ordenCliente } from "../utils/API_ordenes"
@@ -319,7 +328,7 @@ function getFechaActual() {
   return `${año}-${mes}-${dia}`
 }
 
-  const formNFC = ref(null);
+const formNFC = ref(null);
 
 const validarFormulario = async () => {
   dialogEvento.value = true
@@ -345,7 +354,7 @@ const validarFormulario = async () => {
     return;
   }
 
-  
+
 
   guardarNFC()
 }
@@ -424,32 +433,32 @@ const guardarNFC = async () => {
     formDataNFC.value = {
 
       id_Usuario: 0,
-  id_Tipo_Pago: 0,
-  fecha: getFechaActual(), // siempre formato YYYY-MM-DD
-  total: 10,
-  persona_Entregar: "",
-  direccion_entrega: "",
-  telefono: "",
-  estado: 1,
-  entrega_domicilio: false,
+      id_Tipo_Pago: 0,
+      fecha: getFechaActual(), // siempre formato YYYY-MM-DD
+      total: 10,
+      persona_Entregar: "",
+      direccion_entrega: "",
+      telefono: "",
+      estado: 1,
+      entrega_domicilio: false,
 
 
-  detalles: JSON.stringify([
-    {
-      id_articulo: 1,
-      cantidad: 1,
-      precio: 50,
-      subtotal: 50,
-      foto_anverso: null,
-      foto_reverso: null,
-      link: "",
-      texto: "No valido",
-      id_tipo_grabado: 0,
-      nombre: "",
-      telefono_detalle: 0,
+      detalles: JSON.stringify([
+        {
+          id_articulo: 1,
+          cantidad: 1,
+          precio: 50,
+          subtotal: 50,
+          foto_anverso: null,
+          foto_reverso: null,
+          link: "",
+          texto: "No valido",
+          id_tipo_grabado: 0,
+          nombre: "",
+          telefono_detalle: 0,
 
-    }
-  ])
+        }
+      ])
     }
 
     // 3️⃣ Limpiar preview/canvas
@@ -609,6 +618,14 @@ async function handleMenuClick(item) {
     listaGrabados.value = resultado;
 
     mostrarCardFinalizados.value = true;
+  }
+  else {
+    loadingEvento.value = false;
+      dialogState.value = "error";
+      dialogMessage.value = "Error en seleccion de opcion";
+      cierre.value = 2000;
+      mostrardashboard.value = false;
+      mostrarCardFinalizados.value = false;
   }
 }
 

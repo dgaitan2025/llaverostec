@@ -65,6 +65,40 @@ export async function ordenCliente(usuarioId) {
   }
 }
 
+export async function ordenPendienteEntrega() {
+  try {
+    const response = await fetch(UrlWithApiRD(ENDPOINTS.ordenesPendienteEntrega))
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP ${response.status}`)
+    }
+
+    const data = await response.json() // ✅ Aquí obtienes la data real del backend
+    console.log("Respuesta ordenes cliente:", data)
+    return data
+  } catch (error) {
+    console.error("Error al obtener las órdenes:", error)
+    return [] // Retornar array vacío por seguridad
+  }
+}
+
+export async function PendienteEntregaDomicilio() {
+  try {
+    const response = await fetch(UrlWithApiRD(ENDPOINTS.PendienteEntegaDomicilio))
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP ${response.status}`)
+    }
+
+    const data = await response.json() // ✅ Aquí obtienes la data real del backend
+    console.log("Respuesta ordenes cliente:", data)
+    return data
+  } catch (error) {
+    console.error("Error al obtener las órdenes:", error)
+    return [] // Retornar array vacío por seguridad
+  }
+}
+
 export async function actualizarEstadoOrden(idDetalle) {
   try {
     const response = await fetch(UrlWithApiRD(ENDPOINTS.actualizarEstadoOrden), {
@@ -146,5 +180,99 @@ export async function registrarFaseQA({ idDetalle, idFase, comentario }) {
   } catch (error) {
     console.error("❌ Error al registrar QA (fetch):", error);
     throw error;
+  }
+}
+
+export async function pagarOrden(idOrden) {
+  const url = UrlWithApiRD(ENDPOINTS.pagarOrden); // endpoint: /api/ordenes/Pagar_orden
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ p_Id_Orden: idOrden }),
+    });
+
+    // 🔹 Si el servidor devuelve error HTTP (400, 500, etc.)
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Error HTTP:", response.status, errorText);
+      return {
+        ok: false,
+        message: `Error HTTP ${response.status}: ${errorText}`,
+      };
+    }
+
+    // 🔹 Leer el JSON del backend
+    const data = await response.json();
+    console.log("✅ Respuesta del pago:", data);
+
+    // 🔹 Interpretar según el campo success
+    if (data.success) {
+      return {
+        ok: true,
+        message: data.message,
+        payload: data.data, // contiene { orden, estado, avance, pasoActual }
+      };
+    } else {
+      return {
+        ok: false,
+        message: data.message || "El pago no se pudo completar.",
+      };
+    }
+  } catch (error) {
+    console.error("💥 Error al pagar la orden:", error);
+    return {
+      ok: false,
+      message: "Error de conexión o inesperado.",
+      error: error.message,
+    };
+  }
+}
+
+
+export async function usuarioEntrega(idUsuario, idOrden) {
+  const url = UrlWithApiRD(ENDPOINTS.usuarioEntrega); // endpoint: /api/ordenes/Pagar_orden
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({p_Id_usuario: idUsuario, p_Id_Orden: idOrden }),
+    });
+
+    // 🔹 Si el servidor devuelve error HTTP (400, 500, etc.)
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Error HTTP:", response.status, errorText);
+      return {
+        ok: false,
+        message: `Error HTTP ${response.status}: ${errorText}`,
+      };
+    }
+
+    // 🔹 Leer el JSON del backend
+    const data = await response.json();
+    console.log("✅ Respuesta del pago:", data);
+
+    // 🔹 Interpretar según el campo success
+    if (data.success) {
+      return {
+        ok: true,
+        message: data.message,
+      };
+    } else {
+      return {
+        ok: false,
+        message: data.message || "no se pudo asiganar el usuario",
+      };
+    }
+  } catch (error) {
+    console.error("💥 Error al asignar usuario a la orden:", error);
+    return {
+      ok: false,
+      message: "Error de conexión o inesperado.",
+      error: error.message,
+    };
   }
 }

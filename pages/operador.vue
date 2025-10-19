@@ -155,7 +155,7 @@ import { generarHtmlImpresion } from "../utils/imprimir"
 import BotonSecuencial from "../components/botonMultiTarea.vue"
 import { obtenerOrdenPendiente,registrarFaseQA } from "../utils/API_ordenes"
 import dialogStatus from "../components/dialogStatus.vue"
-import OrdenCard from "../components/cardDash.vue"
+
 
 const dialogEvento = ref(false)
 const loadingEvento = ref(false)

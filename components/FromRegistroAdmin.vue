@@ -4,7 +4,7 @@ import { abrirCamara, cerrarCamara, tomarFoto, mostrarPreview } from "../utils/c
 import { initStickers, aplicarFiltro, previewPhoto, imageRef, canvasRef } from "../utils/stickers"
 import dialogStatus from "../components/dialogStatus.vue"
 import { UrlWithApiRD, ENDPOINTS } from "../Service/apiConfig"
-import {validarEdad} from "../utils/FuncionesRegistro"
+import { validarEdad } from "../utils/FuncionesRegistro"
 import { toRaw } from "vue"
 
 const props = defineProps({ modelValue: Boolean })
@@ -73,13 +73,22 @@ const onTomarFoto = async () => {
 
 //Al detectar cambios, ejecuta cambiar el filtro
 watch(filtrosActivos, async (nuevo) => {
-  const resultado = await aplicarFiltro(nuevo, formData)
+    const resultado = await aplicarFiltro(nuevo, formData)
 
-  if (!resultado) return   // 👈 si es undefined, no sigue
+    if (!resultado) return   // 👈 si es undefined, no sigue
 
-  formData.value.Fotografia2Base64 = resultado.foto   // ✅ guardar la imagen/base64
+    formData.value.Fotografia2Base64 = resultado.foto   // ✅ guardar la imagen/base64
 
 })
+
+const roles = ref([
+    { text: "Administrador", value: 1 },
+    { text: "Operador", value: 5 },
+    { text: "Supervisor", value: 2 },
+    { text: "Cliente", value: 4 },
+    { text: "Repartidor", value: 3 },
+    { text: "EntregaTienda", value: 6 },
+])
 
 
 //Limpia el formulario al cerrar
@@ -93,7 +102,7 @@ const resetForm = () => {
         PasswordPlano: "",
         Telefono: "",
         FechaNacimiento: "",
-        RolId: 4,
+        RolId: "",
         FotografiaBase64: "",
         fotografiaMime: "image/png",
         Fotografia2Base64: "",
@@ -113,7 +122,7 @@ const formData = ref({
     PasswordPlano: "",
     Telefono: "",
     FechaNacimiento: "", // formato YYYY-MM-DD
-    RolId: 4,
+    RolId: "",
     FotografiaBase64: "",       // si no mandas imagen, usa null
     FotografiaMime: "image/png",
     Fotografia2Base64: "",
@@ -218,8 +227,7 @@ const submitForm = async () => {
                     <v-text-field v-model="formData.Email" label="Correo" type="email"
                         :rules="[rules.required, rules.email]" required />
                     <v-text-field v-model="formData.Telefono" label="Teléfono" type="tel" maxlength="8"
-                        :rules="[rules.required, rules.onlyNumbers, rules.exactLength]"
-                        required />
+                        :rules="[rules.required, rules.onlyNumbers, rules.exactLength]" required />
                     <v-text-field v-model="formData.FechaNacimiento" label="Fecha nacimiento" type="date"
                         :rules="[rules.required, rules.edad]" required />
 
@@ -238,6 +246,9 @@ const submitForm = async () => {
                     <!-- ComboBox validado -->
                     <v-combobox v-model="fromNoti.notifications" label="Notificaciones" :items="['Correo', 'WhatsApp']"
                         multiple chips :rules="[rules.combo]" required />
+
+                    <v-select v-model="formData.RolId" :items="roles" item-title="text" item-value="value"
+                        label="Tipo de usuario" :rules="[rules.required]" required />
 
                     <!-- Fotografía -->
                     <div class="d-flex ga-3 mt-2">
