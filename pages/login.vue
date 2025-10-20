@@ -155,13 +155,22 @@ const submitForm = async () => {
             dialogMessage.value = "Bienvenido " + data.nickname
 
             // Redirigir según el rol
-            if (data.rolId === 4) {
+            if (data.usuario.rolId === 4) {
                 router.push("/usuario")
-            } else if (data.rolId === 5) {
+            } else if (data.usuario.rolId === 5) {
                 router.push("/operador")
-            } else {
-                navigateTo('/') // fallback
+            }else if (data.usuario.rolId === 6) {
+                router.push("/mostrador")
+            }else if (data.usuario.rolId === 3) {
+                router.push("/repartidor")
+            }else if (data.usuario.rolId === 1) {
+                router.push("/administrador")
+            }else if (data.usuario.rolId === 2) {
+                router.push("/supervisor")
             }
+             else {
+                navigateTo('/') // fallback
+            } 
 
 
         } else {
