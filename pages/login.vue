@@ -154,6 +154,8 @@ const submitForm = async () => {
             dialogState.value = "success"
             dialogMessage.value = "Bienvenido " + data.nickname
 
+            console.log("validando ROL", data.usuario.rolId)
+
             // Redirigir según el rol
             if (data.usuario.rolId === 4) {
                 router.push("/usuario")
