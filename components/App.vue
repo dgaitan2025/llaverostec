@@ -6,7 +6,7 @@
       <button @click="conectar" :disabled="conectado">
         {{ conectado ? "Conectado ✅" : "Conectar" }}
       </button>
-    </div>
+    </div> 
 
     <p v-if="estado" style="margin-top: 1rem;">{{ estado }}</p>
 

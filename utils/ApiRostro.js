@@ -16,7 +16,7 @@ export async function segmentarRostro(base64) {
 
 
   } catch {
-    return {
+    return { 
       resultado: false,
       rostro: null,
       mensaje: "Se usó la imagen original porque la API no respondió"

@@ -5,7 +5,7 @@
     style="max-height: 80vh;"
     show-arrows="hover"
     cycle
-  >
+  > 
     <v-carousel-item
       v-for="(slide, i) in slides"
       :key="i"

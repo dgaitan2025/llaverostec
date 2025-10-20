@@ -55,7 +55,7 @@ console.log("usuario:", usuarioGuardado.usuarioId);
 
 
 // 🔹 Acción al presionar el botón
-async function manejarAccion() {
+async function manejarAccion() { 
   dialogEvento.value = true
   loadingEvento.value = true
   dialogState.value = ""

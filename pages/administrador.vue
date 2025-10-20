@@ -177,7 +177,7 @@ async function handleMenuClick(item) {
       dialogMessage.value = "No tiene órdenes";
       cierre.value = 2000;
       mostrardashboardEntrega.value = false;
-    }
+    } 
 
   }else if (item.value === "registrar"){
 

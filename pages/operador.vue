@@ -508,7 +508,7 @@ const handleMenuClick = async (item) => {
     dialogEvento.value = true
     loadingEvento.value = true
     dialogState.value = ""
-    dialogMessage.value = ""
+    dialogMessage.value = "" 
 
     // Llamar al backend para obtener orden pendiente
     ordenPendiente.value = await obtenerOrdenPendiente(usuario.value.usuarioId)

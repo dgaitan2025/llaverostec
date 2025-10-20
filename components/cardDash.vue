@@ -1,4 +1,4 @@
-<template>
+<template> 
   <v-card class="mx-auto my-4" prepend-icon="mdi-tune" :subtitle="orden.faseActual" max-width="800">
     <template v-slot:title>
       <span class="font-weight-black">Orden #{{ orden.id_Orden }}</span>

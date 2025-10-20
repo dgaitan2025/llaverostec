@@ -57,7 +57,7 @@ export function generarHtmlImpresion({ anverso, reverso, rotationDegFront = 0, r
     image-rendering: crisp-edges;
     transform-origin: center center;
   }
-
+ 
   .label {
     margin-top: 4mm;
     font-size: 10pt;

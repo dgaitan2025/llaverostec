@@ -14,7 +14,7 @@
 
     <div class="text-caption font-weight-regular opacity-60">
       De la llama que inspira al llavero que conecta, fusionamos lo artesanal con lo tecnológico para acompañarte siempre.
-    </div>
+    </div> 
 
     <v-divider></v-divider>
 

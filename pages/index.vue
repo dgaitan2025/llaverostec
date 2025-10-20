@@ -4,7 +4,7 @@ import Card from '../components/card.vue';
 import Carruosell from '../components/carruosell.vue';
 import PiePagina from '../components/piePagina.vue';
 
-</script>
+</script> 
 
 <template>
     <v-container fluid>

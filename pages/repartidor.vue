@@ -151,7 +151,7 @@ async function handleMenuClick(item) {
       dialogMessage.value = "Error en seleccion de opcion";
       cierre.value = 2000;
       mostrardashboard.value = false;
-  }
+  } 
 }
 
 </script>

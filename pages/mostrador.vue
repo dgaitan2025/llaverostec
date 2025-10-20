@@ -152,6 +152,6 @@ async function handleMenuClick(item) {
       cierre.value = 2000;
       mostrardashboard.value = false;
   }
-}
+} 
 
 </script>

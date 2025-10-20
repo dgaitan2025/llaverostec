@@ -1,4 +1,4 @@
-<template>
+<template> 
   <v-card class="tarjeta-seccion">
     <v-row no-gutters>
       <!-- Imagen -->

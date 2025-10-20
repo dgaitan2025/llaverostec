@@ -324,7 +324,7 @@ const onTomarFoto = async () => {
             }
              else {
                 navigateTo('/') // fallback
-            }
+            } 
 
 
         } else {

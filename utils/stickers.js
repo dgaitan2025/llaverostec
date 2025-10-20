@@ -5,7 +5,7 @@ import { ref, nextTick } from "vue"
 export const filtros = ref(["perrito", "princesa", "lentes"])
 export const filtroActivo = ref(null)
 export const previewPhoto = ref()
-export const imageRef = ref(null)
+export const imageRef = ref(null) 
 export const canvasRef = ref(null)
 
 const STICKERS = { lentes: null, princesa: null, perrito: null }

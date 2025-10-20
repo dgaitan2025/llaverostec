@@ -32,7 +32,7 @@ async function RecortarRostro() {
   const soloBase64 = fotoTomada.value.split(",")[1]
   const datos = await segmentarRostro(soloBase64)
   return datos
-}
+} 
 
 export const tomarFaceID = async (videoRef, formData, campoFoto, cerrarFn) => {
   if (!videoRef.value) {

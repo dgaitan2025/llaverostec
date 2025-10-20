@@ -43,7 +43,7 @@
               <p><strong>Nombre:</strong> {{ item.nombre || 'No disponible' }}</p>
               <p><strong>Teléfono:</strong> {{ item.telefono || 'No disponible' }}</p>
             </template>
-
+ 
             <template v-else>
               <p class="text-grey">Tipo desconocido</p>
             </template>

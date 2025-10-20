@@ -8,4 +8,4 @@ export function convertirABase64(file) {
     }
     reader.onerror = error => reject(error)
   })
-}
+} 

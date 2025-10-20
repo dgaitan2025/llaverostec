@@ -20,7 +20,7 @@ const fileInput = ref(null)
 const dialogEvento = ref(false)
 const loadingEvento = ref(false)
 const dialogState = ref("")
-const dialogMessage = ref("")
+const dialogMessage = ref("") 
 const cierre = ref()
 
 

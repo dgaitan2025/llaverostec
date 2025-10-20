@@ -187,7 +187,7 @@ const submitForm = async () => {
             // 👇 si quieres redirigir
             // router.push('/usuario')
         } else {
-            // ❌ Error de validación en API
+            // ❌ Error de validación en API 
             dialogState.value = "error"
             dialogMessage.value = data.mensaje || "❌ Error al registrar el usuario"
         }

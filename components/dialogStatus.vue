@@ -13,7 +13,7 @@
           <v-progress-circular
             color="primary"
             indeterminate
-            :size="59"
+            :size="59" 
             :width="12"
             class="mb-4"
           />

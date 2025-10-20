@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app> 
     <v-navigation-drawer expand-on-hover permanent rail>
       <!-- Usuario -->
       <v-list>

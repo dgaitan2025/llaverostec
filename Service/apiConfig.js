@@ -5,7 +5,7 @@ const API_biometrica = "https://www.server.daossystem.pro:3406"
 
 
 // Endpoints organizados
-export const ENDPOINTS = {
+export const ENDPOINTS = { 
   //Darwin
   listarPuestos: "/api/TipoUsuarios",
 

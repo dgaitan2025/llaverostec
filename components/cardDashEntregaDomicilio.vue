@@ -118,7 +118,7 @@ async function manejarAccion() {
         cierre.value = 2000;
       }
 
-
+ 
     }
 
   } else if(orden.pasoActual === 6 || orden.pasoActual === 7){

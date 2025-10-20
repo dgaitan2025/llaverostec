@@ -97,7 +97,7 @@ export async function PendienteEntregaDomicilio() {
     console.error("Error al obtener las órdenes:", error)
     return [] // Retornar array vacío por seguridad
   }
-}
+} 
 
 export async function actualizarEstadoOrden(idDetalle) {
   try {

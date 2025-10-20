@@ -5,7 +5,7 @@ const API_URL = UrlWithApiRD(ENDPOINTS.conexionWS);
 console.log("API_URL", API_URL);
 
 let connection = null;
-let listeners = {};
+let listeners = {}; 
 
 export function on(eventName, handler) {
   // Si el mismo handler ya está registrado, no volver a agregarlo

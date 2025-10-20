@@ -4,7 +4,7 @@
   @update:model-value="$emit('update:modelValue', $event)"
   transition="dialog-top-transition"
   width="400"
->
+> 
     <v-card>
       <v-toolbar color="indigo-lighten-1" dark>
         <v-toolbar-title>Recuperación de contraseña</v-toolbar-title>

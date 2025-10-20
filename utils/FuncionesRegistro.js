@@ -1,7 +1,7 @@
 //funcion para verificar la edad
 
 export const validarEdad = (v) => {
-  if (!v) return "Debe ingresar una fecha"
+  if (!v) return "Debe ingresar una fecha" 
 
   const hoy = new Date()
   const fechaNac = new Date(v)

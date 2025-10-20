@@ -146,7 +146,7 @@ async function handleMenuClick(item) {
       dialogState.value = "success";
       dialogMessage.value = "Órdenes encontradas: " + ordenes.value.length;
       cierre.value = 2000;
-      mostrardashboard.value = true;
+      mostrardashboard.value = true; 
     } else {
       loadingEvento.value = false;
       dialogState.value = "error";
