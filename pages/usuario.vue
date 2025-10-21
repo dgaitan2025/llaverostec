@@ -106,8 +106,8 @@
         </div>
 
         <v-select v-model="formDataNFC.id_Tipo_Pago" :items="[
-          { text: 'Efectivo', value: 1 },
-          { text: 'Transferencia', value: 2 },
+          { text: 'Efectivo', value: 2 },
+          { text: 'Transferencia', value: 3 },
 
         ]" item-title="text" item-value="value" label="Método de pago"
           :rules="[v => !!v || 'Selecciona un método de pago']" />
