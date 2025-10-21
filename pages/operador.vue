@@ -298,7 +298,7 @@ const acciones = [
           if (resultado.motivo === "Impresión") {
             await registrarFaseQA(
               {idDetalle: formDataNFC.value.id_Detalle,
-                idFase: 3,
+                idFase: 4,
                 comentario: resultado.comentario})
             console.log(formDataNFC.value.id_Detalle,resultado.comentario)
 
@@ -523,15 +523,18 @@ const handleMenuClick = async (item) => {
 
       return
     }
-    if(formDataNFC?.fase_actual === 3){
+    cargaOrden()
+    console.log("Fase actual", formDataNFC.value.fase_actual)
+    if(formDataNFC.value.fase_actual === 3){
        await avanzarFaseOrden(formDataNFC.value.id_Detalle);
+       console.log("Fase actual", formDataNFC.value.fase_actual)
     }
 
    
     
 
     // Si hay datos, continuar con el flujo normal
-   cargaOrden()
+   
 
     // Mostrar formulario
     loadingEvento.value = false
