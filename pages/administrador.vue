@@ -64,7 +64,13 @@ onMounted(async () => {
   // 👉 Define el listener
   connectionListener = async (payload) => {
     console.log("📡 Datos recibidos:", payload);
-    ordenes.value = await PendienteEntregaDomicilio();
+    if (itemSelect.value === "pendientesmostrador") {
+   ordenes.value = await ordenPendienteEntrega()
+
+  }else if (itemSelect.value === "pendientesdomicilio"){
+    ordenes.value = await PendienteEntregaDomicilio()
+
+  }
   };
 
   // 👉 Registra el evento antes de conectar
@@ -109,6 +115,8 @@ const dialogFoto = ref(false)
 const mostrardashboard = ref(false)
 const mostrarCardFinalizados = ref(false)
 
+const itemSelect = ref("")
+
 const menuItems = [
   { icon: "mdi-monitor-dashboard", title: "Ordenes domicilio", value: "pendientesdomicilio" },
    { icon: "mdi-monitor-dashboard", title: "Ordenes entrega tienda", value: "pendientesmostrador" },
@@ -126,37 +134,20 @@ const usuario = ref({
 
 async function handleMenuClick(item) {
   if (item.value === "exit") {
+    itemSelect.value = "exit"
     const sesion = useCookie("token")
     sesion.value = null
     localStorage.removeItem("usuario")
     router.push("/login")
+    
   }
   else if (item.value === "pendientesdomicilio") {
-    //conectar()
-    mostrardashboardEntrega.value = false;
-    dialogEvento.value = true
-    loadingEvento.value = true
-    dialogState.value = ""
-    dialogMessage.value = ""
-
-    ordenes.value = await PendienteEntregaDomicilio()
-
-    if (Array.isArray(ordenes.value) && ordenes.value.length > 0) {
-      loadingEvento.value = false;
-      dialogState.value = "success";
-      dialogMessage.value = "Órdenes encontradas: " + ordenes.value.length;
-      cierre.value = 2000;
-      mostrardashboard.value = true;
-    } else {
-      loadingEvento.value = false;
-      dialogState.value = "error";
-      dialogMessage.value = "No tiene órdenes";
-      cierre.value = 2000;
-      mostrardashboard.value = false;
-    }
+    itemSelect.value = "pendientesdomicilio"
+   await domicilio()
 
   }else if (item.value === "pendientesmostrador") {
     //conectar()
+    itemSelect.value = "pendientesmostrador"
     mostrardashboard.value = false;
     dialogEvento.value = true
     loadingEvento.value = true
@@ -180,6 +171,7 @@ async function handleMenuClick(item) {
     } 
 
   }else if (item.value === "registrar"){
+    itemSelect.value = "Registrar"
 
     showRegistrar.value = true
 
@@ -192,6 +184,32 @@ async function handleMenuClick(item) {
       mostrardashboardEntrega.value = false;
       showRegistrar.value = false
   }
+}
+
+async function domicilio() {
+  //conectar()
+    mostrardashboardEntrega.value = false;
+    dialogEvento.value = true
+    loadingEvento.value = true
+    dialogState.value = ""
+    dialogMessage.value = ""
+
+    ordenes.value = await PendienteEntregaDomicilio()
+
+    if (Array.isArray(ordenes.value) && ordenes.value.length > 0) {
+      loadingEvento.value = false;
+      dialogState.value = "success";
+      dialogMessage.value = "Órdenes encontradas: " + ordenes.value.length;
+      cierre.value = 2000;
+      mostrardashboard.value = true;
+    } else {
+      loadingEvento.value = false;
+      dialogState.value = "error";
+      dialogMessage.value = "No tiene órdenes";
+      cierre.value = 2000;
+      mostrardashboard.value = false;
+    }
+  
 }
 
 </script>
