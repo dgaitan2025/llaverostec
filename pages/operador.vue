@@ -1,4 +1,5 @@
 <template>
+  
   <Sidebar v-if="usuario && usuario.fotografia2" :foto="usuario.fotografia2" :title="usuario.nickname"
     :subtitle="usuario.email" :items="menuItems" @item-click="handleMenuClick">
     <div class="pa-6 text-center">

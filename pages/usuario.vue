@@ -106,8 +106,9 @@
         </div>
 
         <v-select v-model="formDataNFC.id_Tipo_Pago" :items="[
-          { text: 'Efectivo', value: 2 },
-          { text: 'Transferencia', value: 3 },
+          { text: 'Tarjeta Q 15.00', value: 1 },
+          { text: 'Efectivo Q 10.00', value: 2 },
+          { text: 'Transferencia Q 10.00', value: 3 },
 
         ]" item-title="text" item-value="value" label="Método de pago"
           :rules="[v => !!v || 'Selecciona un método de pago']" />
@@ -158,6 +159,25 @@
 
   <PiePagina />
 
+  <v-dialog v-model="dialogTC" max-width="800px" persistent>
+    <v-card>
+      <v-toolbar color="indigo-darken-3" dark>
+        <v-toolbar-title>Completa tu pago</v-toolbar-title>
+        <v-spacer />
+        <v-btn icon @click="dialogTC = false"><v-icon>mdi-close</v-icon></v-btn>
+      </v-toolbar>
+
+      <v-card-text class="pa-0" style="height: 600px;">
+        <iframe v-if="checkoutUrl" :src="checkoutUrl" width="100%" height="100%" style="border: none;"></iframe>
+
+        <div v-else class="text-center pa-6">
+          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+          <p class="mt-4">Cargando pago...</p>
+        </div>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+
   <dialogStatus v-model="dialogEvento" :loading="loadingEvento" :state="dialogState" :message="dialogMessage"
     :auto-close="cierre" />
 </template>
@@ -177,6 +197,24 @@ import { watch } from "vue"
 import OrdenCard from "../components/cardDash.vue"
 import { ordenCliente } from "../utils/API_ordenes"
 import CardGrabado from "../components/cardProdFinalizado.vue"
+import { crearCheckout } from "../utils/Pago_recurrenteTC"
+
+
+const checkoutUrl = ref(null);
+const dialogTC = ref(false)
+
+// 🔹 Función para abrir el pago en modal
+const abrirPago = async (orden) => {
+  dialogTC.value = true;
+  checkoutUrl.value = null;
+  try {
+    checkoutUrl.value = await crearCheckout(orden); // <-- tu orden real
+  } catch (e) {
+    console.error('Error creando checkout:', e.message);
+    dialogTC.value = false;
+  }
+};
+
 
 const ordenes = ref([])
 
@@ -238,6 +276,56 @@ onMounted(() => {
   }
 })
 
+
+onMounted(() => {
+  // ✅ Solo se ejecuta en el cliente (evita error 500 en SSR)
+  if (typeof window !== "undefined") {
+    const params = new URLSearchParams(window.location.search);
+    const estado = params.get("estado");
+
+    if (estado==="cancelado") {
+      dialogEvento.value = true
+      loadingEvento.value = true
+      dialogState.value = ""
+      dialogMessage.value = ""
+      // Envía el mensaje al padre (el componente principal con el modal)
+      window.parent.postMessage({ estado }, "*");
+      console.log("📤 Mensaje enviado al padre con estado:", estado);
+ 
+      loadingEvento.value = false
+      dialogState.value = "error";
+      dialogMessage.value = "Pago cancelado, se cobrara al entregar producto.";
+      cierre.value = 5000
+
+      window.history.replaceState({}, "", window.location.origin + window.location.pathname);
+
+      // 🔹 Restablecer el título correctamente
+      document.title = window.location.origin + window.location.pathname; // Cambia por el título que quieras mostrar
+    }else{
+      dialogEvento.value = true
+      loadingEvento.value = true
+      dialogState.value = ""
+      dialogMessage.value = ""
+      // Envía el mensaje al padre (el componente principal con el modal)
+      window.parent.postMessage({ estado }, "*");
+      console.log("📤 Mensaje enviado al padre con estado:", estado);
+ 
+      loadingEvento.value = false
+      dialogState.value = "success";
+      dialogMessage.value = "Pago realizado con exito.";
+      cierre.value = 5000
+
+      window.history.replaceState({}, "", window.location.origin + window.location.pathname);
+
+      // 🔹 Restablecer el título correctamente
+      document.title = window.location.origin + window.location.pathname;
+
+    }
+  }
+});
+
+
+
 function esURLValida(valor) {
   if (!valor) return false;
   try {
@@ -286,7 +374,7 @@ const capturarImagen = async (marcoRef, tipo) => {
 //Formulario de NFC
 const formDataNFC = ref({
   id_Usuario: 0,
-  id_Tipo_Pago: 0,
+  id_Tipo_Pago: "Seleccione tipo de pago Q 10.00",
   fecha: getFechaActual(), // siempre formato YYYY-MM-DD
   total: 10,
   persona_Entregar: "",
@@ -384,8 +472,8 @@ const guardarNFC = async () => {
       detalles: JSON.stringify([{
         id_articulo: 1,
         cantidad: 1,
-        precio: 50,
-        subtotal: 50,
+        precio: 10,
+        subtotal: 10,
         foto_anverso: formDataNFC.value.foto_anverso,
         foto_reverso: formDataNFC.value.foto_reverso,
         texto: "No valido",
@@ -413,6 +501,20 @@ const guardarNFC = async () => {
       dialogState.value = "success"
       dialogMessage.value = "Creada con exitoso " + data.id_orden
       cierre.value = 2000
+
+      if (orden.id_Tipo_Pago === 1) {
+
+        try {
+          //await abrirPago(data.id_orden);
+          await crearCheckout(data.id_orden)
+        } catch (err) {
+          console.error("Error en el pago:", err.message);
+        }
+
+
+      }
+
+
     } else {
       loadingEvento.value = false
       dialogState.value = "error"
@@ -621,12 +723,12 @@ async function handleMenuClick(item) {
   }
   else {
     loadingEvento.value = false;
-      dialogState.value = "error";
-      dialogMessage.value = "Error en seleccion de opcion";
-      cierre.value = 2000;
-      mostrardashboard.value = false;
-      mostrarCardFinalizados.value = false;
-  } 
+    dialogState.value = "error";
+    dialogMessage.value = "Error en seleccion de opcion";
+    cierre.value = 2000;
+    mostrardashboard.value = false;
+    mostrarCardFinalizados.value = false;
+  }
 }
 
 

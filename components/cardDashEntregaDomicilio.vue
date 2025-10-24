@@ -9,8 +9,16 @@
       <v-progress-linear color="lime" height="10"
         :model-value="orden.pago_realizado === 1 ? orden.porcentaje + 20 : orden.porcentaje" striped rounded
         class="w-100" />
+    </div>
+
+    <div class="text-center mt-0">
+      <small>{{ orden.persona_Entregar }} / {{ orden.telefono }}</small>
 
     </div>
+    <div class="text-center mt-0">
+      <small>{{ orden.direccion_entrega }}</small>
+    </div>
+
 
     <!-- 🟢 Botón dinámico (solo en fases Pago o Entrega) -->
     <div v-if="orden.pasoActual === 6" class="text-center pb-4">
@@ -25,7 +33,7 @@
       </v-btn>
     </div>
 
-    
+
 
 
     <div v-if="orden.tipo_pago === 2 && orden.pasoActual === 8" class="text-center pb-4">
@@ -118,28 +126,28 @@ async function manejarAccion() {
         cierre.value = 2000;
       }
 
- 
+
     }
 
-  } else if(orden.pasoActual === 6 || orden.pasoActual === 7){
+  } else if (orden.pasoActual === 6 || orden.pasoActual === 7) {
 
     const result = await actualizarEstadoOrden(orden.id_detalle);
-      if (result?.mensaje) {
-        loadingEvento.value = false;
-        dialogState.value = "success";
-        dialogMessage.value = "Cambio de fase exitoso"
-        cierre.value = 2000;
-      } else {
-        loadingEvento.value = false;
-        dialogState.value = "error";
-        dialogMessage.value = "Error en cambio de fase"
-        cierre.value = 2000;
-      }
+    if (result?.mensaje) {
+      loadingEvento.value = false;
+      dialogState.value = "success";
+      dialogMessage.value = "Cambio de fase exitoso"
+      cierre.value = 2000;
+    } else {
+      loadingEvento.value = false;
+      dialogState.value = "error";
+      dialogMessage.value = "Error en cambio de fase"
+      cierre.value = 2000;
+    }
 
 
   }
-  
-  
+
+
   else {
     loadingEvento.value = false;
     dialogState.value = "error";
