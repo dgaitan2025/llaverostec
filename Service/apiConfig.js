@@ -1,5 +1,5 @@
 // DOminio
-export const API_RD = "https://api-llavero-rd.onrender.com"//"https://api-llavero-rd.onrender.com"//"https://localhost:7291"//"https://pllaverosweb-d8fnd6d8dyd8hdgb.canadacentral-01.azurewebsites.net"//"https://localhost:7291"//"https://apitect.somee.com"; //RD"http://pruebas.somee.com/"//
+export const API_RD = "https://localhost:7291"//"https://api-llavero-rd.onrender.com"//"https://localhost:7291"//"https://pllaverosweb-d8fnd6d8dyd8hdgb.canadacentral-01.azurewebsites.net"//"https://localhost:7291"//"https://apitect.somee.com"; //RD"http://pruebas.somee.com/"//
 const API_DG = "https://api-llaveros.onrender.com"; //DG
 const API_biometrica = "https://www.daossystem.pro"
 
@@ -25,7 +25,8 @@ export const ENDPOINTS = {
   pagarOrden:"/api/ordenes/Pagar_orden",
   usuarioEntrega:"/api/ordenes/Registrar_entregaUsuario",
   PendienteEntegaDomicilio:"/api/ordenes/PendienteEntregaDomicilio",
-
+  pendienteAsinarDomicilio:"/api/ordenes/PendienteAsignarRepartidor",
+  ordenAsignadasRepartidor:(id)=>`/api/ordenes/OrdenesPorRepartidor/${id}`,
 
   //Biometria
   segmentar: "/api/Rostro/Segmentar",

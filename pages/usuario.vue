@@ -202,6 +202,7 @@ import { crearCheckout } from "../utils/Pago_recurrenteTC"
 
 const checkoutUrl = ref(null);
 const dialogTC = ref(false)
+const itemSelect = ref("")
 
 // 🔹 Función para abrir el pago en modal
 const abrirPago = async (orden) => {
@@ -225,7 +226,18 @@ onMounted(async () => {
   // 👉 Define el listener
   connectionListener = async (payload) => {
     console.log("📡 Datos recibidos:", payload);
-    ordenes.value = await ordenCliente(usuario.value.usuarioId);
+    
+    if (itemSelect.value === "dashboard") {
+      ordenes.value = await ordenCliente(usuario.value.usuarioId);
+
+    } else if (itemSelect.value === "ordenesFinalizadas") {
+      await obtenerOrdenFinalizadas(usuario.value.usuarioId);
+
+    }
+
+
+
+
   };
 
   // 👉 Registra el evento antes de conectar
@@ -283,7 +295,7 @@ onMounted(() => {
     const params = new URLSearchParams(window.location.search);
     const estado = params.get("estado");
 
-    if (estado==="cancelado") {
+    if (estado === "cancelado") {
       dialogEvento.value = true
       loadingEvento.value = true
       dialogState.value = ""
@@ -291,7 +303,7 @@ onMounted(() => {
       // Envía el mensaje al padre (el componente principal con el modal)
       window.parent.postMessage({ estado }, "*");
       console.log("📤 Mensaje enviado al padre con estado:", estado);
- 
+
       loadingEvento.value = false
       dialogState.value = "error";
       dialogMessage.value = "Pago cancelado, se cobrara al entregar producto.";
@@ -301,7 +313,7 @@ onMounted(() => {
 
       // 🔹 Restablecer el título correctamente
       document.title = window.location.origin + window.location.pathname; // Cambia por el título que quieras mostrar
-    }else{
+    } else {
       dialogEvento.value = true
       loadingEvento.value = true
       dialogState.value = ""
@@ -309,7 +321,7 @@ onMounted(() => {
       // Envía el mensaje al padre (el componente principal con el modal)
       window.parent.postMessage({ estado }, "*");
       console.log("📤 Mensaje enviado al padre con estado:", estado);
- 
+
       loadingEvento.value = false
       dialogState.value = "success";
       dialogMessage.value = "Pago realizado con exito.";
@@ -652,17 +664,20 @@ const usuario = ref({
 
 async function handleMenuClick(item) {
   if (item.value === "exit") {
+    itemSelect.value = "exit"
     const sesion = useCookie("token")
     sesion.value = null
     localStorage.removeItem("usuario")
     router.push("/login")
   } else if (item.value === "shared") {
+    itemSelect.value = "crearllavero"
     mostrarCardFinalizados.value = false;
     mostrardashboard.value = false;
     mostrarFormulario.value = true   // 👈 activa el formulario
   }
   else if (item.value === "dashboard") {
     //conectar()
+    itemSelect.value = "dashboard"
     dialogEvento.value = true
     loadingEvento.value = true
     dialogState.value = ""
@@ -691,6 +706,8 @@ async function handleMenuClick(item) {
 
 
   } else if (item.value === "myfiles") {
+
+    itemSelect.value = "ordenesFinalizadas"
     dialogEvento.value = true
     loadingEvento.value = true
     dialogState.value = ""

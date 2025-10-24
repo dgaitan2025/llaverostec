@@ -99,6 +99,47 @@ export async function PendienteEntregaDomicilio() {
   }
 } 
 
+export async function asignadasRepartidorDomicilio(idRepatidor) {
+  try {
+    const response = await fetch(UrlWithApiRD(ENDPOINTS.ordenAsignadasRepartidor(idRepatidor)))
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP ${response.status}`)
+    }
+
+    const data = await response.json() // ✅ Aquí obtienes la data real del backend
+    console.log("Respuesta ordenes cliente:", data)
+    return data
+  } catch (error) {
+    console.error("Error al obtener las órdenes:", error)
+    return [] // Retornar array vacío por seguridad
+  }
+} 
+
+export async function PendienteAsignarDomicilio() {
+  try {
+    const response = await fetch(UrlWithApiRD(ENDPOINTS.pendienteAsinarDomicilio));
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP ${response.status}`);
+    }
+
+    // ✅ La API devuelve { ordenes: [...], usuarios: [...] }
+    const data = await response.json();
+
+    console.log("📦 Respuesta completa del backend:", data);
+
+    // 🔹 Verificamos que existan ambas propiedades
+    const ordenes = Array.isArray(data.ordenes) ? data.ordenes : [];
+    const usuarios = Array.isArray(data.usuarios) ? data.usuarios : [];
+
+    return { ordenes, usuarios };
+  } catch (error) {
+    console.error("❌ Error al obtener las órdenes y usuarios:", error);
+    return { ordenes: [], usuarios: [] }; // estructura segura por defecto
+  }
+}
+
 export async function actualizarEstadoOrden(idDetalle) {
   try {
     const response = await fetch(UrlWithApiRD(ENDPOINTS.actualizarEstadoOrden), {

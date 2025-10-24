@@ -43,7 +43,7 @@ import { useRouter } from "vue-router"
 import dialogStatus from "../components/dialogStatus.vue"
 import { startConnection, on, connection } from "../utils/signalr";
 import OrdenCard from "../components/cardDashEntregaDomicilio.vue"
-import { PendienteEntregaDomicilio} from "../utils/API_ordenes"
+import { asignadasRepartidorDomicilio} from "../utils/API_ordenes"
 
 const ordenes = ref([])
 
@@ -129,7 +129,7 @@ async function handleMenuClick(item) {
     mostrarFormulario.value = false
     mostrarCardFinalizados.value = false
 
-    ordenes.value = await PendienteEntregaDomicilio()
+    ordenes.value = await asignadasRepartidorDomicilio(usuario.value.usuarioId)
 
     if (Array.isArray(ordenes.value) && ordenes.value.length > 0) {
       loadingEvento.value = false;

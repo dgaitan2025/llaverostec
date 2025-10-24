@@ -1,7 +1,7 @@
 <template>
   <Sidebar v-if="usuario && usuario.fotografia2" :foto="usuario.fotografia2" :title="usuario.nickname"
     :subtitle="usuario.email" :items="menuItems" @item-click="handleMenuClick">
-     
+
     <div class="pa-6 text-center">
       <!-- Foto clickeable -->
       <v-avatar size="80" class="cursor-pointer" @click="dialogFoto = true">
@@ -14,7 +14,7 @@
     <!-- dasboard -->
 
     <div v-if="mostrardashboard" class="pa-6 text-center">
-      <OrdenCard v-for="item in ordenes" :key="item.id_Orden" :orden="item" />
+      <OrdenCard v-for="item in ordenes" :key="item.id_Orden" :orden="item" :usuarios="usuarios" />
 
     </div>
 
@@ -48,13 +48,16 @@ import { ref, onMounted, onUnmounted } from "vue"
 import { useRouter } from "vue-router"
 import dialogStatus from "../components/dialogStatus.vue"
 import { startConnection, on, connection } from "../utils/signalr";
-import OrdenCard from "../components/cardDashEntregaDomicilio.vue"
-import { PendienteEntregaDomicilio, ordenPendienteEntrega} from "../utils/API_ordenes"
+import OrdenCard from "../components/cardDashAsigDomicilio.vue"
+import { PendienteAsignarDomicilio, ordenPendienteEntrega } from "../utils/API_ordenes"
 import OrdenCardEntrega from "../components/cardDashEntrega.vue"
 import RegistroDialog from "../components/FromRegistroAdmin.vue"
 
 const ordenes = ref([])
+const usuarios = ref([])
 const mostrardashboardEntrega = ref(false)
+
+const itemSelect = ref("")
 
 
 
@@ -64,7 +67,21 @@ onMounted(async () => {
   // 👉 Define el listener
   connectionListener = async (payload) => {
     console.log("📡 Datos recibidos:", payload);
-    ordenes.value = await PendienteEntregaDomicilio();
+
+    if (itemSelect.value === "pendientesdomicilio") {
+      const { ordenes: listaOrdenes, usuarios: listaUsuarios } = await PendienteAsignarDomicilio();
+
+      // 🔹 Guardamos en los estados reactivos
+      ordenes.value = listaOrdenes;
+      usuarios.value = listaUsuarios;
+
+    } else if (itemSelect.value === "pendientesmostrador") {
+      ordenes.value = await ordenPendienteEntrega()
+
+    }
+
+
+
   };
 
   // 👉 Registra el evento antes de conectar
@@ -98,7 +115,7 @@ onMounted(() => {
     const usuarioGuardado = localStorage.getItem("usuario")
     if (usuarioGuardado) {
       usuario.value = JSON.parse(usuarioGuardado)
-      
+
     }
   }
 })
@@ -111,8 +128,8 @@ const mostrardashboard = ref(false)
 
 const menuItems = [
   { icon: "mdi-monitor-dashboard", title: "Ordenes domicilio", value: "pendientesdomicilio" },
-   { icon: "mdi-monitor-dashboard", title: "Ordenes entrega tienda", value: "pendientesmostrador" },
-   
+  { icon: "mdi-monitor-dashboard", title: "Ordenes entrega tienda", value: "pendientesmostrador" },
+
   { icon: "mdi-login", title: "Salir", value: "exit" }
 ]
 
@@ -126,6 +143,7 @@ const usuario = ref({
 
 async function handleMenuClick(item) {
   if (item.value === "exit") {
+    itemSelect.value = "exit"
     const sesion = useCookie("token")
     sesion.value = null
     localStorage.removeItem("usuario")
@@ -133,20 +151,25 @@ async function handleMenuClick(item) {
   }
   else if (item.value === "pendientesdomicilio") {
     //conectar()
+    itemSelect.value = "pendientesdomicilio"
     mostrardashboardEntrega.value = false;
     dialogEvento.value = true
     loadingEvento.value = true
     dialogState.value = ""
     dialogMessage.value = ""
 
-    ordenes.value = await PendienteEntregaDomicilio()
+    const { ordenes: listaOrdenes, usuarios: listaUsuarios } = await PendienteAsignarDomicilio();
+
+    // 🔹 Guardamos en los estados reactivos
+    ordenes.value = listaOrdenes;
+    usuarios.value = listaUsuarios;
 
     if (Array.isArray(ordenes.value) && ordenes.value.length > 0) {
       loadingEvento.value = false;
       dialogState.value = "success";
       dialogMessage.value = "Órdenes encontradas: " + ordenes.value.length;
       cierre.value = 2000;
-      mostrardashboard.value = true; 
+      mostrardashboard.value = true;
     } else {
       loadingEvento.value = false;
       dialogState.value = "error";
@@ -155,8 +178,9 @@ async function handleMenuClick(item) {
       mostrardashboard.value = false;
     }
 
-  }else if (item.value === "pendientesmostrador") {
+  } else if (item.value === "pendientesmostrador") {
     //conectar()
+    itemSelect.value = "pendientesmostrador"
     mostrardashboard.value = false;
     dialogEvento.value = true
     loadingEvento.value = true
@@ -179,13 +203,14 @@ async function handleMenuClick(item) {
       mostrardashboardEntrega.value = false;
     }
 
-  }else {
+  } else {
+
     loadingEvento.value = false;
-      dialogState.value = "error";
-      dialogMessage.value = "Error en seleccion de opcion";
-      cierre.value = 2000;
-      mostrardashboardEntrega.value = false;
-      mostrardashboard.value = false;
+    dialogState.value = "error";
+    dialogMessage.value = "Error en seleccion de opcion";
+    cierre.value = 2000;
+    mostrardashboardEntrega.value = false;
+    mostrardashboard.value = false;
   }
 }
 

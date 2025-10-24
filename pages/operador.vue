@@ -449,7 +449,7 @@ const formDataNFC = ref({
 
 })
 
-// 🔹 Restaurar datos del localStorage
+// 🔹 Restaurar datos del localStorage 
 onMounted(() => {
   const usuarioGuardado = localStorage.getItem("usuario")
   if (usuarioGuardado) usuario.value = JSON.parse(usuarioGuardado)
