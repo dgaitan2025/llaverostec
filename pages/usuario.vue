@@ -313,7 +313,7 @@ onMounted(() => {
 
       // 🔹 Restablecer el título correctamente
       document.title = window.location.origin + window.location.pathname; // Cambia por el título que quieras mostrar
-    } else {
+    } else if (estado === "exito") {
       dialogEvento.value = true
       loadingEvento.value = true
       dialogState.value = ""

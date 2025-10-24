@@ -65,6 +65,23 @@ export async function ordenCliente(usuarioId) {
   }
 }
 
+export async function ordenesClientes() {
+  try {
+    const response = await fetch(UrlWithApiRD(ENDPOINTS.ordenesClientesProceso))
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP ${response.status}`)
+    }
+
+    const data = await response.json() // ✅ Aquí obtienes la data real del backend
+    console.log("Respuesta ordenes cliente:", data)
+    return data
+  } catch (error) {
+    console.error("Error al obtener las órdenes:", error)
+    return [] // Retornar array vacío por seguridad
+  }
+}
+
 export async function ordenPendienteEntrega() {
   try {
     const response = await fetch(UrlWithApiRD(ENDPOINTS.ordenesPendienteEntrega))

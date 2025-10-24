@@ -27,6 +27,7 @@ export const ENDPOINTS = {
   PendienteEntegaDomicilio:"/api/ordenes/PendienteEntregaDomicilio",
   pendienteAsinarDomicilio:"/api/ordenes/PendienteAsignarRepartidor",
   ordenAsignadasRepartidor:(id)=>`/api/ordenes/OrdenesPorRepartidor/${id}`,
+  ordenesClientesProceso:"/api/ordenes/GetordenesUsuarios",
 
   //Biometria
   segmentar: "/api/Rostro/Segmentar",

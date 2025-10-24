@@ -1,7 +1,7 @@
 <template>
   <Sidebar v-if="usuario && usuario.fotografia2" :foto="usuario.fotografia2" :title="usuario.nickname"
     :subtitle="usuario.email" :items="menuItems" @item-click="handleMenuClick">
-     <RegistroDialog v-model="showRegistrar" />
+    <RegistroDialog v-model="showRegistrar" />
     <div class="pa-6 text-center">
       <!-- Foto clickeable -->
       <v-avatar size="80" class="cursor-pointer" @click="dialogFoto = true">
@@ -20,6 +20,11 @@
 
     <div v-if="mostrardashboardEntrega" class="pa-6 text-center">
       <OrdenCardEntrega v-for="item in ordenes" :key="item.id_Orden" :orden="item" />
+
+    </div>
+
+    <div v-if="mostrarCardFinalizados" class="pa-6 text-center">
+      <OrdenCardtotal v-for="item in ordenes" :key="item.id_Orden" :orden="item" />
 
     </div>
 
@@ -49,13 +54,15 @@ import { useRouter } from "vue-router"
 import dialogStatus from "../components/dialogStatus.vue"
 import { startConnection, on, connection } from "../utils/signalr";
 import OrdenCard from "../components/cardDashEntregaDomicilio.vue"
-import { PendienteEntregaDomicilio, ordenPendienteEntrega} from "../utils/API_ordenes"
+import { PendienteEntregaDomicilio, ordenPendienteEntrega } from "../utils/API_ordenes"
 import OrdenCardEntrega from "../components/cardDashEntrega.vue"
 import RegistroDialog from "../components/FromRegistroAdmin.vue"
+import OrdenCardtotal from "../components/cardDash.vue"
 
 const ordenes = ref([])
 const mostrardashboardEntrega = ref(false)
 const showRegistrar = ref(false)
+const mostrardashboardtotal = ref(false)
 
 
 let connectionListener = null;
@@ -65,12 +72,16 @@ onMounted(async () => {
   connectionListener = async (payload) => {
     console.log("📡 Datos recibidos:", payload);
     if (itemSelect.value === "pendientesmostrador") {
-   ordenes.value = await ordenPendienteEntrega()
+      ordenes.value = await ordenPendienteEntrega()
 
-  }else if (itemSelect.value === "pendientesdomicilio"){
-    ordenes.value = await PendienteEntregaDomicilio()
+    } else if (itemSelect.value === "pendientesdomicilio") {
+      ordenes.value = await PendienteEntregaDomicilio()
 
-  }
+    } else if (itemSelect.value === "ordenesProcesos") {
+      ordenes.value = await ordenesClientes()
+
+
+    }
   };
 
   // 👉 Registra el evento antes de conectar
@@ -104,7 +115,7 @@ onMounted(() => {
     const usuarioGuardado = localStorage.getItem("usuario")
     if (usuarioGuardado) {
       usuario.value = JSON.parse(usuarioGuardado)
-      
+
     }
   }
 })
@@ -119,8 +130,9 @@ const itemSelect = ref("")
 
 const menuItems = [
   { icon: "mdi-monitor-dashboard", title: "Ordenes domicilio", value: "pendientesdomicilio" },
-   { icon: "mdi-monitor-dashboard", title: "Ordenes entrega tienda", value: "pendientesmostrador" },
-   { icon: "mdi-account", title: "Registrar", value: "registrar" },
+  { icon: "mdi-monitor-dashboard", title: "Ordenes entrega tienda", value: "pendientesmostrador" },
+  { icon: "mdi-monitor-dashboard", title: "Todas las ordenes", value: "ordenesProcesos" },
+  { icon: "mdi-account", title: "Registrar", value: "registrar" },
   { icon: "mdi-login", title: "Salir", value: "exit" }
 ]
 
@@ -139,16 +151,17 @@ async function handleMenuClick(item) {
     sesion.value = null
     localStorage.removeItem("usuario")
     router.push("/login")
-    
+
   }
   else if (item.value === "pendientesdomicilio") {
     itemSelect.value = "pendientesdomicilio"
-   await domicilio()
+    await domicilio()
 
-  }else if (item.value === "pendientesmostrador") {
+  } else if (item.value === "pendientesmostrador") {
     //conectar()
     itemSelect.value = "pendientesmostrador"
     mostrardashboard.value = false;
+    mostrarCardFinalizados.value = false;
     dialogEvento.value = true
     loadingEvento.value = true
     dialogState.value = ""
@@ -168,48 +181,81 @@ async function handleMenuClick(item) {
       dialogMessage.value = "No tiene órdenes";
       cierre.value = 2000;
       mostrardashboardEntrega.value = false;
-    } 
+    }
 
-  }else if (item.value === "registrar"){
-    itemSelect.value = "Registrar"
+  } else if (item.value === "ordenesProcesos") {
+    itemSelect.value = "ordenesProcesos"
 
-    showRegistrar.value = true
-
-  }else {
-    loadingEvento.value = false;
-      dialogState.value = "error";
-      dialogMessage.value = "Error en seleccion de opcion";
-      cierre.value = 2000;
-      mostrardashboard.value = false;
-      mostrardashboardEntrega.value = false;
-      showRegistrar.value = false
-  }
-}
-
-async function domicilio() {
-  //conectar()
-    mostrardashboardEntrega.value = false;
+    itemSelect.value = "dashboard"
     dialogEvento.value = true
     loadingEvento.value = true
     dialogState.value = ""
     dialogMessage.value = ""
 
-    ordenes.value = await PendienteEntregaDomicilio()
+    mostrardashboardEntrega.value = false;
+    mostrardashboard.value = false;
+
+    ordenes.value = await ordenesClientes()
 
     if (Array.isArray(ordenes.value) && ordenes.value.length > 0) {
       loadingEvento.value = false;
       dialogState.value = "success";
       dialogMessage.value = "Órdenes encontradas: " + ordenes.value.length;
       cierre.value = 2000;
-      mostrardashboard.value = true;
+      mostrarCardFinalizados.value = true;
     } else {
       loadingEvento.value = false;
       dialogState.value = "error";
-      dialogMessage.value = "No tiene órdenes";
+      dialogMessage.value = "No tiene órdenes finalizadas";
       cierre.value = 2000;
-      mostrardashboard.value = false;
+      mostrarCardFinalizados.value = false;
     }
-  
+
+
+  }
+
+
+  else if (item.value === "registrar") {
+    itemSelect.value = "Registrar"
+
+    showRegistrar.value = true
+
+  } else {
+    loadingEvento.value = false;
+    dialogState.value = "error";
+    dialogMessage.value = "Error en seleccion de opcion";
+    cierre.value = 2000;
+    mostrardashboard.value = false;
+    mostrardashboardEntrega.value = false;
+    showRegistrar.value = false
+  }
+}
+
+async function domicilio() {
+  //conectar()
+  mostrardashboardEntrega.value = false;
+  mostrarCardFinalizados.value = false;
+  dialogEvento.value = true
+  loadingEvento.value = true
+  dialogState.value = ""
+  dialogMessage.value = ""
+
+  ordenes.value = await PendienteEntregaDomicilio()
+
+  if (Array.isArray(ordenes.value) && ordenes.value.length > 0) {
+    loadingEvento.value = false;
+    dialogState.value = "success";
+    dialogMessage.value = "Órdenes encontradas: " + ordenes.value.length;
+    cierre.value = 2000;
+    mostrardashboard.value = true;
+  } else {
+    loadingEvento.value = false;
+    dialogState.value = "error";
+    dialogMessage.value = "No tiene órdenes";
+    cierre.value = 2000;
+    mostrardashboard.value = false;
+  }
+
 }
 
 </script>
