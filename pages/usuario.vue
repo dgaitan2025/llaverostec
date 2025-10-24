@@ -71,7 +71,7 @@
           </div>
 
           <!-- Botón para rotar -->
-          <v-btn color="primary" size="small" class="mt-4" @click="rotarImagen">
+          <v-btn v-if="false" color="primary" size="small" class="mt-4" @click="rotarImagen" disable>
             Rotar
           </v-btn>
         </div>
@@ -100,7 +100,7 @@
           </div>
 
           <!-- Botón para rotar -->
-          <v-btn color="primary" size="small" class="mt-4" @click="rotarImagen2">
+          <v-btn v-if="false" color="primary" size="small" class="mt-4" @click="rotarImagen2">
             Rotar
           </v-btn>
         </div>

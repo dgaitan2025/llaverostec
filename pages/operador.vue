@@ -494,7 +494,6 @@ const rotarImagen2 = async () => (rotation2.value = (rotation2.value + 90) % 360
 // 🔹 Sidebar
 const menuItems = [
   { icon: "mdi-briefcase", title: "Asignar Orden", value: "shared" },
-  { icon: "mdi-folder", title: "Orden procesadas", value: "myfiles" },
   { icon: "mdi-login", title: "Salir", value: "exit" }
 ]
 
