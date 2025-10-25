@@ -1,5 +1,5 @@
 // DOminio
-export const API_RD = "https://rd-api-llaveros.onrender.com"//PRINCIPAL"https://api-llavero-rd.onrender.com" ALTERNO//"https://rd-api-llaveros.onrender.com"//"https://pllaverosweb-d8fnd6d8dyd8hdgb.canadacentral-01.azurewebsites.net"//"https://localhost:7291"//"https://apitect.somee.com"; //RD"http://pruebas.somee.com/"//
+export const API_RD = "https://api-llavero-rd.onrender.com"//PRINCIPAL"https://api-llavero-rd.onrender.com" ALTERNO//"https://rd-api-llaveros.onrender.com"//"https://pllaverosweb-d8fnd6d8dyd8hdgb.canadacentral-01.azurewebsites.net"//"https://localhost:7291"//"https://apitect.somee.com"; //RD"http://pruebas.somee.com/"//
 const API_DG = "https://api-llaveros.onrender.com"; //DG
 const API_biometrica = "https://www.daossystem.pro"
 

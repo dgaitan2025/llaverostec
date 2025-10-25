@@ -65,7 +65,7 @@ async function manejarAccion() {
   dialogEvento.value = true
   loadingEvento.value = true
   dialogState.value = ""
-  dialogMessage.value = "Registrando pago"
+  dialogMessage.value = "Procesando"
 
   if (orden.pago_realizado === 0) {
 
