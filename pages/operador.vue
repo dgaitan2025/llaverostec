@@ -524,7 +524,9 @@ const handleMenuClick = async (item) => {
 
       return
     }
-    cargaOrden()
+    formDataNFC.value = ordenPendiente.value
+
+
     console.log("Fase actual", formDataNFC.value.fase_actual)
     if(formDataNFC.value.fase_actual === 3){
        await avanzarFaseOrden(formDataNFC.value.id_Detalle);
@@ -547,10 +549,10 @@ const handleMenuClick = async (item) => {
   }
 }
 
-async function cargaOrden() {
-   const datosGuardados = localStorage.getItem("ordenPendiente")
+async function cargaOrden(datos) {
+   const datosGuardados = datos
     if (datosGuardados) {
-      formDataNFC.value = JSON.parse(datosGuardados)
+      formDataNFC.value = datos.value
       console.log("📦 Datos form:", formDataNFC.value)
     }
 

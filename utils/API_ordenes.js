@@ -35,10 +35,10 @@ export async function obtenerOrdenPendiente(operadorId) {
       domicilio: data.entrega_domicilio,
     }
 
-    localStorage.setItem("ordenPendiente", JSON.stringify(datosReducidos))
+    //localStorage.setItem("ordenPendiente", JSON.stringify(datosReducidos))
 
     console.log("✅ Orden pendiente:", data)
-    return data
+    return datosReducidos
 
   } catch (error) {
     console.error("❌ Error al llamar API:", error)
