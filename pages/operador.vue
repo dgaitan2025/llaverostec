@@ -387,6 +387,7 @@ const imprimirFotos = () => {
     const html = generarHtmlImpresion({
       anverso: `data:image/png;base64,${anverso}`,
       reverso: `data:image/png;base64,${reverso}`,
+      orden: formDataNFC.value.id_orden,
       rotationDegFront: rotation.value || 0,
       rotationDegBack: rotation2.value || 0,
       titulo: "Carnet – Llavero",

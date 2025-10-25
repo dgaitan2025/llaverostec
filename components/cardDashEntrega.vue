@@ -13,6 +13,12 @@
     </div>
 
     <!-- 🟢 Botón dinámico (solo en fases Pago o Entrega) -->
+<div v-if="orden.tipo_pago === 1" class="text-center pb-4">
+      <v-btn :color="orden.pago_realizado === 0 ? 'red' : 'blue'" class="px-8" @click="manejarAccion">
+        {{ orden.pago_realizado === 0 ? 'Cobrar' : 'Entregar' }}
+      </v-btn>
+    </div>
+
     <div v-if="orden.tipo_pago === 2" class="text-center pb-4">
       <v-btn :color="orden.pago_realizado === 0 ? 'red' : 'blue'" class="px-8" @click="manejarAccion">
         {{ orden.pago_realizado === 0 ? 'Cobrar' : 'Entregar' }}

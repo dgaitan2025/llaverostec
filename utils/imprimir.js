@@ -1,4 +1,4 @@
-export function generarHtmlImpresion({ anverso, reverso, rotationDegFront = 0, rotationDegBack = 0, titulo = "Impresión" }) {
+export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront = 0, rotationDegBack = 0, titulo = "Impresión" }) {
   // Usamos cm para respetar el tamaño físico al imprimir
   // 3.5cm x 4.5cm como pediste, con un pequeño “marco” para corte.
   return `
@@ -104,7 +104,7 @@ export function generarHtmlImpresion({ anverso, reverso, rotationDegFront = 0, r
   <div class="sheet">
     <!-- ANVERSO -->
     <div class="card">
-      <h2 class="title">Anverso</h2>
+      <h2 class="title">Anverso, orden ${orden}</h2>
       <div class="slot">
         <img src="${anverso}" alt="Anverso" style="transform: rotate(${rotationDegFront}deg);" />
       </div>
@@ -113,7 +113,7 @@ export function generarHtmlImpresion({ anverso, reverso, rotationDegFront = 0, r
 
     <!-- REVERSO -->
     <div class="card">
-      <h2 class="title">Reverso</h2>
+      <h2 class="title">Reverso, orden ${orden} </h2>
       <div class="slot">
         <img src="${reverso}" alt="Reverso" style="transform: rotate(${rotationDegBack}deg);" />
       </div>
