@@ -56,7 +56,7 @@
         <div v-if="formDataNFC.foto_anverso" style="text-align:center; margin-top:8px;">
           <!-- Marco fijo -->
           <div ref="marcoFrontalRef"
-            style="width:3.5cm; height:4.5.cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+            style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
             <!-- Imagen -->
             <img :src="`data:image/png;base64,${formDataNFC.foto_anverso}`" :style="{
               transform: `rotate(${rotation}deg)`,
@@ -771,7 +771,7 @@ const mostrarPreview2 = (e) => {
     const img = new Image();
     img.onload = () => {
       // Conversión: 4.7cm ≈ 177px, 3.4cm ≈ 128px
-      const width = 128;  // ancho fijo (3.4 cm)
+      const width = 135;  // ancho fijo (3.4 cm)
       const height = 177; // alto fijo (4.7 cm)
 
       const canvas = document.createElement("canvas");
@@ -814,25 +814,28 @@ const mostrarPreview1 = (e) => {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
 
-      // Tamaño fijo en píxeles (equivalente a 4.7cm x 3.4cm aprox)
-      const width = 128;  // ancho
-      const height = 177; // alto
-
+      // Tamaño fijo (4.7cm x 3.4cm aprox)
+      const width = 135;
+      const height = 177;
       canvas.width = width;
       canvas.height = height;
 
-      // Dibuja la imagen centrada dentro del área
-      ctx.fillStyle = "#ffffff"; // fondo blanco (puedes cambiarlo o quitarlo)
+      // Fondo blanco
+      ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, width, height);
 
-      // Calcula cómo escalar manteniendo proporción
-      let scale = Math.min(width / img.width, height / img.height);
-      let x = (width / 2) - (img.width / 2) * scale;
-      let y = (height / 2) - (img.height / 2) * scale;
+      // Escalar sin deformar
+      const scale = Math.min(width / img.width, height / img.height);
+      const scaledWidth = img.width * scale;
+      const scaledHeight = img.height * scale;
 
-      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+      // Centrar
+      const x = (width - scaledWidth) / 2;
+      const y = (height - scaledHeight) / 2;
 
-      // Convierte a Base64 (solo el contenido)
+      ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+
+      // Exportar
       const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.95);
       formDataNFC.value.foto_anverso = resizedDataUrl.split(",")[1];
     };
@@ -840,6 +843,7 @@ const mostrarPreview1 = (e) => {
   };
   reader.readAsDataURL(file);
 };
+
 
 const itemsPago = [
   // { text: 'Tarjeta Q 15.00', value: 1 }, // <-- comentario válido aquí

@@ -27,7 +27,7 @@ export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront
     align-items: start;
   }
   .card {
-    width: 4.1cm; /* 3.5 + 0.3 bleed por lado aprox visual */
+    width: 4.1cm; /* 3.4 + 0.3 bleed por lado aprox visual */
     padding: 3mm;
     border: 0.5pt solid #999;
     border-radius: 2mm;
@@ -38,8 +38,8 @@ export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront
     margin: 0 0 6mm 0;
   }
   .slot {
-    width: 3.5cm;
-    height: 4.5cm;
+    width: 3.4cm;
+    height: 4.8cm;
     margin: 0 auto;
     border: 0.5pt dashed #666; /* guía de corte */
     display: flex;
@@ -66,8 +66,8 @@ export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront
   /* Marcas de corte ligeras */
   .crop {
     position: relative;
-    width: 3.5cm;
-    height: 4.5cm;
+    width: 3.4cm;
+    height: 4.8cm;
   }
   .crop:before, .crop:after {
     content: "";
@@ -108,7 +108,7 @@ export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront
       <div class="slot">
         <img src="${anverso}" alt="Anverso" style="transform: rotate(${rotationDegFront}deg);" />
       </div>
-      <div class="label">3.5 cm × 4.5 cm</div>
+      <div class="label">3.4 cm × 4.8 cm</div>
     </div>
 
     <!-- REVERSO -->
@@ -117,7 +117,7 @@ export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront
       <div class="slot">
         <img src="${reverso}" alt="Reverso" style="transform: rotate(${rotationDegBack}deg);" />
       </div>
-      <div class="label">3.5 cm × 4.5 cm</div>
+      <div class="label">3.4 cm × 4.8 cm</div>
     </div>
   </div>
 
