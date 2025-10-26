@@ -763,86 +763,28 @@ const fileInput2 = ref(null)
 const opcionFoto2 = ref(null)
 
 const mostrarPreview2 = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      formDataNFC.value.foto_reverso = ev.target.result.split(",")[1]
 
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    const img = new Image();
-    img.onload = () => {
-      // Conversión: 4.7cm ≈ 177px, 3.4cm ≈ 128px
-      const width = 135;  // ancho fijo (3.4 cm)
-      const height = 177; // alto fijo (4.7 cm)
-
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      canvas.width = width;
-      canvas.height = height;
-
-      // Fondo blanco para rellenar áreas vacías
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, width, height);
-
-      // Mantiene proporción original de la imagen
-      const scale = Math.min(width / img.width, height / img.height);
-      const x = (width / 2) - (img.width / 2) * scale;
-      const y = (height / 2) - (img.height / 2) * scale;
-
-      // Dibuja la imagen redimensionada y centrada
-      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-
-      // Convierte a Base64 (solo datos, sin encabezado)
-      const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.95);
-      formDataNFC.value.foto_reverso = resizedDataUrl.split(",")[1];
-
-      // Si quieres mostrar vista previa (opcional)
-      formDataNFC.value.preview_reverso = resizedDataUrl;
-    };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-};
+    }
+    reader.readAsDataURL(file)
+  }
+}
 
 const mostrarPreview1 = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      formDataNFC.value.foto_anverso = ev.target.result.split(",")[1]
 
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-
-      // Tamaño fijo (4.7cm x 3.4cm aprox)
-      const width = 135;
-      const height = 177;
-      canvas.width = width;
-      canvas.height = height;
-
-      // Fondo blanco
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, width, height);
-
-      // Escalar sin deformar
-      const scale = Math.min(width / img.width, height / img.height);
-      const scaledWidth = img.width * scale;
-      const scaledHeight = img.height * scale;
-
-      // Centrar
-      const x = (width - scaledWidth) / 2;
-      const y = (height - scaledHeight) / 2;
-
-      ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
-
-      // Exportar
-      const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.95);
-      formDataNFC.value.foto_anverso = resizedDataUrl.split(",")[1];
-    };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-};
+    }
+    reader.readAsDataURL(file)
+  }
+}
 
 
 const itemsPago = [
