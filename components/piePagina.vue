@@ -5,12 +5,12 @@
       <div class="d-flex ga-3 justify-center">
         <v-btn v-for="icon in icons" :key="icon" :icon="icon" density="comfortable" variant="text" color="white" />
       </div>
-      <a href="https://www.umg.edu.gt" target="_blank" rel="noopener noreferrer">
-        <v-img src="/imagenes/Logo.png" max-width="90" contain class="footer-logo" />
-      </a>
+      
+        <!--<v-img src="/imagenes/Logo.png" max-width="90" contain class="footer-logo" /> -->
+      
 
 
-      <!-- 🔹 Frase -->
+       <!--🔹 Frase -->
 
       Llavero que conecta, fusionamos lo artesanal
       con lo tecnológico para acompañarte siempre.

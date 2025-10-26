@@ -56,7 +56,7 @@
         <div v-if="formDataNFC.foto_anverso" style="text-align:center; margin-top:8px;">
           <!-- Marco fijo -->
           <div ref="marcoFrontalRef"
-            style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+            style="width:3.5cm; height:4.5.cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
             <!-- Imagen -->
             <img :src="`data:image/png;base64,${formDataNFC.foto_anverso}`" :style="{
               transform: `rotate(${rotation}deg)`,
@@ -105,15 +105,10 @@
           </v-btn>
         </div>
 
-        <v-select v-model="formDataNFC.id_Tipo_Pago" :items="[
-          { text: 'Tarjeta Q 15.00', value: 1 },
-          { text: 'Efectivo Q 10.00', value: 2 },
-          { text: 'Transferencia Q 10.00', value: 3 },
-
-        ]" item-title="text" item-value="value" label="Método de pago"
+        <v-select v-model="formDataNFC.id_Tipo_Pago" :items="itemsPago" item-title="text" item-value="value" label="Método de pago"
           :rules="[v => !!v || 'Selecciona un método de pago']" />
 
-        <v-select v-model="formDataNFC.entrega" :items="['Presencial', 'Domicilio']" label="Entrega"
+        <v-select v-model="formDataNFC.entrega" :items="itemsEntrega" label="Entrega"
           :rules="[v => !!v || 'Selecciona el tipo de entrega']" />
 
         <div v-if="formDataNFC.entrega === 'Domicilio'">
@@ -125,6 +120,16 @@
           <v-text-field v-model="formDataNFC.direccion_entrega" label="Direccion"
             :rules="[v => !!v || 'La dirección es obligatoria']"></v-text-field>
         </div>
+
+        <div v-if="formDataNFC.entrega === 'Interior colegio Mixto Belen'">
+
+          <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre"
+            :rules="[v => !!v || 'El nombre de entrega es obligatorio']"></v-text-field>
+          <v-text-field v-model="formDataNFC.telefono" label="Telefono"
+            :rules="[v => !!v || 'El teléfono de entrega es obligatorio']"></v-text-field>
+          
+        </div>
+
 
 
 
@@ -187,7 +192,7 @@ import Sidebar from "../components/barraUser.vue"
 import PiePagina from "../components/piePagina.vue"
 import { ref, onMounted, onUnmounted } from "vue"
 import { useRouter } from "vue-router"
-import { abrirCamara, cerrarCamara, tomarFaceID, mostrarPreview } from "../utils/camara"
+import { abrirCamara, cerrarCamara, tomarFaceID, } from "../utils/camara"
 import { previewPhoto } from "../utils/stickers"
 import { UrlWithApiRD, ENDPOINTS } from "../Service/apiConfig"
 import dialogStatus from "../components/dialogStatus.vue"
@@ -416,7 +421,7 @@ const formDataNFC = ref({
 })
 
 watch(() => formDataNFC.value.entrega, (nuevoValor) => {
-  formDataNFC.value.entrega_domicilio = (nuevoValor === 'Domicilio')
+  formDataNFC.value.entrega_domicilio = (nuevoValor === 'Domicilio' || nuevoValor === 'Interior colegio Mixto Belen')
 })
 
 
@@ -574,6 +579,10 @@ const guardarNFC = async () => {
         }
       ])
     }
+
+    //limpia las variables 
+    formDataNFC.value.foto_anverso = "";
+    formDataNFC.value.foto_reverso = "";
 
     // 3️⃣ Limpiar preview/canvas
     previewPhoto.value = null
@@ -754,28 +763,95 @@ const fileInput2 = ref(null)
 const opcionFoto2 = ref(null)
 
 const mostrarPreview2 = (e) => {
-  const file = e.target.files[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      formDataNFC.value.foto_reverso = ev.target.result.split(",")[1]
+  const file = e.target.files[0];
+  if (!file) return;
 
-    }
-    reader.readAsDataURL(file)
-  }
-}
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      // Conversión: 4.7cm ≈ 177px, 3.4cm ≈ 128px
+      const width = 128;  // ancho fijo (3.4 cm)
+      const height = 177; // alto fijo (4.7 cm)
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = width;
+      canvas.height = height;
+
+      // Fondo blanco para rellenar áreas vacías
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+
+      // Mantiene proporción original de la imagen
+      const scale = Math.min(width / img.width, height / img.height);
+      const x = (width / 2) - (img.width / 2) * scale;
+      const y = (height / 2) - (img.height / 2) * scale;
+
+      // Dibuja la imagen redimensionada y centrada
+      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+      // Convierte a Base64 (solo datos, sin encabezado)
+      const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.95);
+      formDataNFC.value.foto_reverso = resizedDataUrl.split(",")[1];
+
+      // Si quieres mostrar vista previa (opcional)
+      formDataNFC.value.preview_reverso = resizedDataUrl;
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+};
 
 const mostrarPreview1 = (e) => {
-  const file = e.target.files[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      formDataNFC.value.foto_anverso = ev.target.result.split(",")[1]
+  const file = e.target.files[0];
+  if (!file) return;
 
-    }
-    reader.readAsDataURL(file)
-  }
-}
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Tamaño fijo en píxeles (equivalente a 4.7cm x 3.4cm aprox)
+      const width = 128;  // ancho
+      const height = 177; // alto
+
+      canvas.width = width;
+      canvas.height = height;
+
+      // Dibuja la imagen centrada dentro del área
+      ctx.fillStyle = "#ffffff"; // fondo blanco (puedes cambiarlo o quitarlo)
+      ctx.fillRect(0, 0, width, height);
+
+      // Calcula cómo escalar manteniendo proporción
+      let scale = Math.min(width / img.width, height / img.height);
+      let x = (width / 2) - (img.width / 2) * scale;
+      let y = (height / 2) - (img.height / 2) * scale;
+
+      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+      // Convierte a Base64 (solo el contenido)
+      const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.95);
+      formDataNFC.value.foto_anverso = resizedDataUrl.split(",")[1];
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+const itemsPago = [
+  // { text: 'Tarjeta Q 15.00', value: 1 }, // <-- comentario válido aquí
+  { text: 'Efectivo Q 10.00', value: 2 },
+  { text: 'Transferencia Q 10.00', value: 3 }
+];
+
+const itemsEntrega = [
+//'Presencial', 
+//'Domicilio',
+'Interior colegio Mixto Belen'
+];
 
 
 </script>

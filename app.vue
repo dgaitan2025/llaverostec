@@ -21,7 +21,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: url("/imagenes/Logo.png") center center no-repeat;
+  background: url("/imagenes/Logo.jpg") center center no-repeat;
   background-size: 400px; /* Ajusta el tamaño de la imagen */
   opacity: 0.08; /* Controla la transparencia */
   pointer-events: none; /* No bloquea clics ni inputs */
