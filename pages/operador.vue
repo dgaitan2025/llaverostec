@@ -92,7 +92,7 @@
         </div>
 
       </div>
-      <v-btn color="success" variant="elevated" @click="imprimirFotos()"></v-btn>
+      
 
       <BotonSecuencial :acciones="acciones" :fase-actual="formDataNFC?.fase_actual" />
 

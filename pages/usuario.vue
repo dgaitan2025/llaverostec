@@ -94,7 +94,7 @@
         </div>
 
         <!-- Segunda foto -->
-        <v-select v-model="opcionFoto2" :items="subirImagen2" label="Fotografia Reverso" prepend-icon="mdi-camera" 
+        <v-select v-model="opcionFoto2" :items="subirImagen2" label="Fotografia Reverso" prepend-icon="mdi-camera"
           @update:model-value="manejarSeleccionFoto" />
 
         <input ref="fileInput2" type="file" accept="image/*" style="display:none" @change="orientacioIMG2" />
@@ -127,7 +127,7 @@
             </v-col>
 
             <v-col cols="auto">
-              <v-tooltip text="Su imagen será eliminada después de la entrega del llavero.">
+              <v-tooltip text="Su imagen será eliminada después de la entrega del llavero." open-on-touch>
                 <template #activator="{ props }">
                   <v-icon v-bind="props" color="primary">mdi-information</v-icon>
                 </template>
