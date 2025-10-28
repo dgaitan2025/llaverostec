@@ -19,7 +19,7 @@ export function generarHtmlImpresion({ anverso, reverso, orden, fill1, fill2, es
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   @page {
-    size: A4;
+    size: 10.2cm 15.2cm;
     margin: 10mm;
   }
   html, body {
@@ -31,7 +31,7 @@ export function generarHtmlImpresion({ anverso, reverso, orden, fill1, fill2, es
   }
   .sheet {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr ;
     gap: 2mm;
     align-items: start;
   }
@@ -127,6 +127,7 @@ export function generarHtmlImpresion({ anverso, reverso, orden, fill1, fill2, es
   }
 
   @media print {
+    
     .no-print { display: none; }
   }
 
