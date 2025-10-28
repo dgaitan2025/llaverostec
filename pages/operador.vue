@@ -96,7 +96,7 @@
 
       <BotonSecuencial :acciones="acciones" :fase-actual="formDataNFC?.fase_actual" />
 
-
+        
 
     </div>
   </Sidebar>

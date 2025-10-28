@@ -7,8 +7,9 @@ export function generarHtmlImpresion({ anverso, reverso, orden, fill1, fill2, es
   var widthSlot2 = esVertical2 ? "3.4cm" : "4.9cm";
   var heightSlot2 = esVertical2 ? "4.9cm" : "3.4cm";
 
-  var widthSlot1 = esVertical ? "3.4cm" : "4.9cm";
+  var widthSlot1 = esVertical ? "3.4cm" : "4.9cm"; //"4.9cm" : "3.4cm";
   var heightSlot1 = esVertical ? "4.9cm" : "3.4cm";
+
   return `
 <!DOCTYPE html>
 <html lang="es">
@@ -30,21 +31,21 @@ export function generarHtmlImpresion({ anverso, reverso, orden, fill1, fill2, es
   }
   .sheet {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12mm;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    gap: 2mm;
     align-items: start;
   }
   .card {
     width: ${widthSlot1}; /* 3.4 + 0.3 bleed por lado aprox visual */
-    padding: 3mm;
+    padding: 1mm;
     border: 0.5pt solid #999;
     border-radius: 2mm;
     text-align: center;
   }
 
-    .card2 {
+  .card2 {
     width: ${widthSlot2}; /* 3.4 + 0.3 bleed por lado aprox visual */
-    padding: 3mm;
+    padding: 1mm;
     border: 0.5pt solid #999;
     border-radius: 2mm;
     text-align: center;
@@ -58,7 +59,7 @@ export function generarHtmlImpresion({ anverso, reverso, orden, fill1, fill2, es
     height: ${heightSlot1};
     margin: 0 auto;
     border: 0.5pt dashed #666; /* guía de corte */
-    display: flex;
+    
     align-items: center;
     justify-content: center;
     overflow: hidden;
@@ -141,20 +142,19 @@ export function generarHtmlImpresion({ anverso, reverso, orden, fill1, fill2, es
   <div class="sheet">
     <!-- ANVERSO -->
     <div class="card">
-      <h2 class="title">Anverso, orden ${orden}</h2>
+      <p>A. Orden ${orden}</p>
       <div class="slot">
         <img src="${anverso}" alt="Anverso"  />
       </div>
-      <div class="label">3.4 cm × 4.9 cm</div>
+      
     </div>
 
     <!-- REVERSO -->
     <div class="card2">
-      <h2 class="title">Reverso, orden ${orden} </h2>
+      <p>R, Orden ${orden} </p>
       <div class="slotR">
         <img src="${reverso}" alt="Reverso"  />
-      </div>
-      <div class="label">3.4 cm × 4.9 cm</div>
+      </div> 
     </div>
   </div>
 
