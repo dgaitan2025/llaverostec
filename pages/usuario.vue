@@ -127,7 +127,7 @@
             </v-col>
 
             <v-col cols="auto">
-              <v-tooltip text="Su imagen será eliminada después de la entrega del llavero." open-on-touch>
+              <v-tooltip text="Su imagen será eliminada después de la entrega del llavero." open-on-click>
                 <template #activator="{ props }">
                   <v-icon v-bind="props" color="primary">mdi-information</v-icon>
                 </template>
