@@ -50,14 +50,14 @@ const drawCenteredRotated = (ctx, img, cx, cy, w, h, angleRad) => {
 export const aplicarFiltro = async (filtrosSeleccionados = []) => {
     
     if (!previewPhoto.value){
-        console.log("fallo")
+       // console.log("fallo")
         return} 
     await nextTick()
     
 
     const img = imageRef.value
     const canvas = canvasRef.value
-    if (!img || !canvas) {console.log("IngresoStikert") 
+    if (!img || !canvas) {//console.log("IngresoStikert") 
         
         return}
     if (!img.complete || img.naturalWidth === 0) {
@@ -78,7 +78,7 @@ export const aplicarFiltro = async (filtrosSeleccionados = []) => {
         .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }))
         .withFaceLandmarks()
     if (!det) {
-        console.log("resutaldo")
+       // console.log("resutaldo")
 
         //alert("❌ No se detectó ningún rostro en la foto")
         previewPhoto.value = null
@@ -140,7 +140,7 @@ export const aplicarFiltro = async (filtrosSeleccionados = []) => {
 
     const base64 = canvas.toDataURL("image/png");
     const soloBase64 = base64.split(",")[1]; // 👈 elimina "data:image/png;base64,"
-    console.log("resutaldo" + soloBase64)
+    //console.log("resutaldo" + soloBase64)
     return {
         verificado:true,
         foto:soloBase64

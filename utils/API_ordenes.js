@@ -40,7 +40,7 @@ export async function obtenerOrdenPendiente(operadorId) {
 
     //localStorage.setItem("ordenPendiente", JSON.stringify(datosReducidos))
 
-    console.log("✅ Orden pendiente:", data)
+   // console.log("✅ Orden pendiente:", data)
     return datosReducidos
 
   } catch (error) {
@@ -60,7 +60,7 @@ export async function ordenCliente(usuarioId) {
     }
 
     const data = await response.json() // ✅ Aquí obtienes la data real del backend
-    console.log("Respuesta ordenes cliente:", data)
+   // console.log("Respuesta ordenes cliente:", data)
     return data
   } catch (error) {
     console.error("Error al obtener las órdenes:", error)
@@ -77,7 +77,7 @@ export async function ordenesClientes() {
     }
 
     const data = await response.json() // ✅ Aquí obtienes la data real del backend
-    console.log("Respuesta ordenes cliente:", data)
+    //console.log("Respuesta ordenes cliente:", data)
     return data
   } catch (error) {
     console.error("Error al obtener las órdenes:", error)
@@ -94,7 +94,7 @@ export async function ordenPendienteEntrega() {
     }
 
     const data = await response.json() // ✅ Aquí obtienes la data real del backend
-    console.log("Respuesta ordenes cliente:", data)
+   // console.log("Respuesta ordenes cliente:", data)
     return data
   } catch (error) {
     console.error("Error al obtener las órdenes:", error)
@@ -111,7 +111,7 @@ export async function PendienteEntregaDomicilio() {
     }
 
     const data = await response.json() // ✅ Aquí obtienes la data real del backend
-    console.log("Respuesta ordenes cliente:", data)
+    //console.log("Respuesta ordenes cliente:", data)
     return data
   } catch (error) {
     console.error("Error al obtener las órdenes:", error)
@@ -128,7 +128,7 @@ export async function asignadasRepartidorDomicilio(idRepatidor) {
     }
 
     const data = await response.json() // ✅ Aquí obtienes la data real del backend
-    console.log("Respuesta ordenes cliente:", data)
+   // console.log("Respuesta ordenes cliente:", data)
     return data
   } catch (error) {
     console.error("Error al obtener las órdenes:", error)
@@ -147,7 +147,7 @@ export async function PendienteAsignarDomicilio() {
     // ✅ La API devuelve { ordenes: [...], usuarios: [...] }
     const data = await response.json();
 
-    console.log("📦 Respuesta completa del backend:", data);
+   // console.log("📦 Respuesta completa del backend:", data);
 
     // 🔹 Verificamos que existan ambas propiedades
     const ordenes = Array.isArray(data.ordenes) ? data.ordenes : [];
@@ -174,7 +174,7 @@ export async function actualizarEstadoOrden(idDetalle) {
     }
 
     const data = await response.json();
-    console.log("✅ Respuesta actualizar estado:", data);
+   // console.log("✅ Respuesta actualizar estado:", data);
     return data;
   } catch (error) {
     console.error("❌ Error al actualizar estado:", error);
@@ -202,7 +202,7 @@ export async function obtenerOrdenFinalizadas(usuarioId) {
       throw new Error(data.mensaje || "Error al obtener ordenes pendiente")
     }
 
-    console.log("✅ Orden pendiente:", data)
+    //console.log("✅ Orden pendiente:", data)
     return data
 
   } catch (error) {
@@ -236,7 +236,7 @@ export async function registrarFaseQA({ idDetalle, idFase, comentario }) {
     }
 
     const data = await response.json();
-    console.log("✅ QA registrada:", data);
+   // console.log("✅ QA registrada:", data);
     return data;
   } catch (error) {
     console.error("❌ Error al registrar QA (fetch):", error);
@@ -266,7 +266,7 @@ export async function pagarOrden(idOrden) {
 
     // 🔹 Leer el JSON del backend
     const data = await response.json();
-    console.log("✅ Respuesta del pago:", data);
+    //console.log("✅ Respuesta del pago:", data);
 
     // 🔹 Interpretar según el campo success
     if (data.success) {
@@ -314,7 +314,7 @@ export async function usuarioEntrega(idUsuario, idOrden) {
 
     // 🔹 Leer el JSON del backend
     const data = await response.json();
-    console.log("✅ Respuesta del pago:", data);
+    //console.log("✅ Respuesta del pago:", data);
 
     // 🔹 Interpretar según el campo success
     if (data.success) {

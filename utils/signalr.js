@@ -2,7 +2,7 @@ import * as signalR from "@microsoft/signalr";
 import { UrlWithApiRD, ENDPOINTS } from "../Service/apiConfig";
 
 const API_URL = UrlWithApiRD(ENDPOINTS.conexionWS);
-console.log("API_URL", API_URL);
+//console.log("API_URL", API_URL);
 
 let connection = null;
 let listeners = {}; 
@@ -21,7 +21,7 @@ export function on(eventName, handler) {
 
 export async function startConnection(getToken = null) {
   if (connection && connection.connectionState === "Connected") {
-    console.log("⚡ SignalR ya está conectado");
+   // console.log("⚡ SignalR ya está conectado");
     return;
   }
 
@@ -44,7 +44,7 @@ export async function startConnection(getToken = null) {
 
   try {
     await connection.start();
-    console.log("✅ Conectado a SignalR:", API_URL);
+   // console.log("✅ Conectado a SignalR:", API_URL);
   } catch (err) {
     console.error("❌ Error al conectar SignalR:", err);
     setTimeout(() => startConnection(getToken), 5000);
@@ -54,7 +54,7 @@ export async function startConnection(getToken = null) {
 export async function stopConnection() {
   if (connection && typeof connection.stop === "function") {
     await connection.stop();
-    console.log("🧹 Conexión SignalR detenida");
+  //  console.log("🧹 Conexión SignalR detenida");
   }
 }
 

@@ -314,7 +314,7 @@ let connectionListener = null;
 onMounted(async () => {
   // 👉 Define el listener
   connectionListener = async (payload) => {
-    console.log("📡 Datos recibidos:", payload);
+   // console.log("📡 Datos recibidos:", payload);
 
     if (itemSelect.value === "dashboard") {
       ordenes.value = await ordenCliente(usuario.value.usuarioId);
@@ -340,7 +340,7 @@ onUnmounted(() => {
   try {
     if (connection?.off && connectionListener) {
       connection.off("RecibirSaludo", connectionListener);
-      console.log("🧹 Listener eliminado correctamente");
+     // console.log("🧹 Listener eliminado correctamente");
     }
   } catch (err) {
     console.warn("⚠️ No se pudo eliminar el listener SignalR:", err);
@@ -391,7 +391,7 @@ onMounted(() => {
       dialogMessage.value = ""
       // Envía el mensaje al padre (el componente principal con el modal)
       window.parent.postMessage({ estado }, "*");
-      console.log("📤 Mensaje enviado al padre con estado:", estado);
+     // console.log("📤 Mensaje enviado al padre con estado:", estado);
 
       loadingEvento.value = false
       dialogState.value = "error";
@@ -409,7 +409,7 @@ onMounted(() => {
       dialogMessage.value = ""
       // Envía el mensaje al padre (el componente principal con el modal)
       window.parent.postMessage({ estado }, "*");
-      console.log("📤 Mensaje enviado al padre con estado:", estado);
+     // console.log("📤 Mensaje enviado al padre con estado:", estado);
 
       loadingEvento.value = false
       dialogState.value = "success";
@@ -555,7 +555,7 @@ const guardarNFC = async () => {
       }])
     }
 
-    console.log("Datos de la orden a enviar ", orden)
+   // console.log("Datos de la orden a enviar ", orden)
 
 
     const response = await fetch(UrlWithApiRD(ENDPOINTS.crearOrden), {
@@ -565,7 +565,7 @@ const guardarNFC = async () => {
     })
 
     const data = await response.json()
-    console.log("Respuesta API:", data)
+   // console.log("Respuesta API:", data)
 
     if (data.success) {
       loadingEvento.value = false
@@ -595,8 +595,8 @@ const guardarNFC = async () => {
     }
 
 
-    console.log("Datos de form", formDataNFC.value)
-    console.log("Datos de form2", orden)
+   // console.log("Datos de form", formDataNFC.value)
+    //console.log("Datos de form2", orden)
     formDataNFC.value.fotografia = previewPhoto.value
 
 
@@ -798,7 +798,7 @@ async function handleMenuClick(item) {
       cierre.value = 2000;
       mostrarCardFinalizados.value = false;
     }
-    console.log("Datos finalizados", resultado);
+    //console.log("Datos finalizados", resultado);
 
     // Asigna al ref (no lo redeclares con const)
     listaGrabados.value = resultado;
