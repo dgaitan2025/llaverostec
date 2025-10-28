@@ -80,14 +80,22 @@
           <!-- Checkbox centrado -->
           <v-row justify="center" class="mt-2 align-center">
             <v-col cols="auto">
-              <v-checkbox v-model="estirar" label="Estirar imagen al marco." hide-details density="compact" />
+              <v-checkbox v-model="estirar" label="Redimensionar imagen." hide-details
+                density="compact" />
             </v-col>
             <v-col cols="auto">
-              <v-tooltip text="Su imagen será eliminada después de la entrega del llavero.">
-                <template #activator="{ props }">
-                  <v-icon v-bind="props" color="primary">mdi-information</v-icon>
-                </template>
-              </v-tooltip>
+              <v-icon color="primary" @click="mostrar = true">mdi-information</v-icon>
+
+              <v-dialog v-model="mostrar" max-width="280">
+                <v-card class="pa-3 text-center">
+                  <v-card-text>
+                    Su imagen será eliminada después de la entrega del llavero.
+                  </v-card-text>
+                  <v-card-actions>
+                    <v-btn text color="primary" @click="mostrar = false">Entendido</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
             </v-col>
           </v-row>
 
@@ -123,15 +131,23 @@
           </div>
           <v-row justify="center" class="mt-2 align-center">
             <v-col cols="auto">
-              <v-checkbox v-model="estirar2" label="Estirar imagen al marco." hide-details density="compact" />
+              <v-checkbox v-model="estirar2" label="Redimensionar imagen." hide-details
+                density="compact" />
             </v-col>
 
             <v-col cols="auto">
-              <v-tooltip text="Su imagen será eliminada después de la entrega del llavero." open-on-click>
-                <template #activator="{ props }">
-                  <v-icon v-bind="props" color="primary">mdi-information</v-icon>
-                </template>
-              </v-tooltip>
+              <v-icon color="primary" @click="mostrar = true">mdi-information</v-icon>
+
+              <v-dialog v-model="mostrar" max-width="280">
+                <v-card class="pa-3 text-center">
+                  <v-card-text>
+                    Su imagen será eliminada después de la entrega del llavero.
+                  </v-card-text>
+                  <v-card-actions>
+                    <v-btn text color="primary" @click="mostrar = false">Entendido</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
             </v-col>
           </v-row>
         </div>
@@ -240,6 +256,7 @@ import { crearCheckout } from "../utils/Pago_recurrenteTC"
 const estirar = ref(false) // <--- nuevo checkbox
 const estirar2 = ref(false) // <--- nuevo checkbox
 import { analizarImagen } from "../utils/ResizeImg"
+const mostrar = ref(false)
 
 const limitarTelefono = (e) => {
   // elimina cualquier carácter no numérico y corta a 8 dígitos
