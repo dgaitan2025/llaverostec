@@ -1,5 +1,5 @@
 <template>
-  
+
   <Sidebar v-if="usuario && usuario.fotografia2" :foto="usuario.fotografia2" :title="usuario.nickname"
     :subtitle="usuario.email" :items="menuItems" @item-click="handleMenuClick">
     <div class="pa-6 text-center">
@@ -34,46 +34,68 @@
       <v-select v-model="opcionFoto" :items="['Tomar Foto', 'Subir Archivo']" label="Fotografía Anverso"
         prepend-icon="mdi-camera" @update:model-value="manejarSeleccionFoto" disabled />
 
-      <input ref="fileInput" type="file" accept="image/*" hidden @change="mostrarPreview1" />
+      <input ref="fileInput" type="file" accept="image/*" hidden />
 
-      <div v-if="formDataNFC.foto_anverso" class="mt-4 text-center">
-        <div
-          style="width:3.4cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+      <div v-if="formDataNFC.foto_anverso" style="text-align:center; margin-top:8px;">
+        <div class="mx-auto mt-6 position-relative" :style="{
+          width: esVertical ? '3.4cm' : '4.9cm',
+          height: esVertical ? '4.9cm' : '3.4cm',
+          border: '1px solid #000',
+          background: '#fff',
+          overflow: 'hidden',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          position: 'relative',
+          transition: 'all 0.3s ease',
+        }">
+          <!-- Imagen -->
           <img :src="`data:image/png;base64,${formDataNFC.foto_anverso}`" :style="{
-            transform: `rotate(${rotation}deg)`,
-            objectFit: 'contain',
-            width: 'auto',
-            height: '100%'
+            width: '100%',
+            height: '100%',
+            objectFit: formDataNFC.fill1 ? 'fill' : 'contain',
+            transition: 'transform 0.3s ease',
           }" />
         </div>
-        <v-btn color="primary" size="small" class="mt-2" @click="rotarImagen">Rotar</v-btn>
+
       </div>
 
       <!-- Foto Reverso -->
       <v-select v-model="opcionFoto2" :items="['Tomar Foto 2', 'Subir Archivo 2']" label="Fotografía Reverso"
         prepend-icon="mdi-camera" @update:model-value="manejarSeleccionFoto2" disabled />
 
-      <input ref="fileInput2" type="file" accept="image/*" hidden @change="mostrarPreview2" />
+      <input ref="fileInput2" type="file" accept="image/*" hidden />
 
-      <div v-if="formDataNFC.foto_reverso" class="mt-4 text-center">
-        <div
-          style="width:3.4cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+      <div v-if="formDataNFC.foto_reverso" style="text-align:center; margin-top:8px;">
+
+        <div class="mx-auto mt-6 position-relative" :style="{
+          width: esVertical2 ? '3.4cm' : '4.9cm',
+          height: esVertical2 ? '4.9cm' : '3.4cm',
+          border: '1px solid #000',
+          background: '#fff',
+          overflow: 'hidden',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          position: 'relative',
+          transition: 'all 0.3s ease',
+          }">
           <!-- Imagen -->
-          <div
-            style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+          
             <img :src="`data:image/png;base64,${formDataNFC.foto_reverso}`" :style="{
-              transform: `rotate(${rotation2}deg)`,
-              objectFit: 'contain',
-              width: 'auto',
-              height: '100%'
+              width: '100%',
+              height: '100%',
+              objectFit: formDataNFC.fill2 ? 'fill' : 'contain',
+              transition: 'transform 0.3s ease',
             }" />
-          </div>
+          
         </div>
-        <v-btn color="primary" size="small" class="mt-2" @click="rotarImagen2">Rotar</v-btn>
+
       </div>
+      <v-btn color="success" variant="elevated" @click="imprimirFotos()"></v-btn>
 
       <BotonSecuencial :acciones="acciones" :fase-actual="formDataNFC?.fase_actual" />
-      
+
 
 
     </div>
@@ -154,8 +176,12 @@ import { useRouter } from "vue-router"
 import { abrirCamara, cerrarCamara, tomarFoto } from "../utils/camara"
 import { generarHtmlImpresion } from "../utils/imprimir"
 import BotonSecuencial from "../components/botonMultiTarea.vue"
-import { obtenerOrdenPendiente,registrarFaseQA } from "../utils/API_ordenes"
+import { obtenerOrdenPendiente, registrarFaseQA } from "../utils/API_ordenes"
 import dialogStatus from "../components/dialogStatus.vue"
+import { analizarBase64 } from "../utils/ResizeImg"
+
+const esVertical = ref(false)
+const esVertical2 = ref(false)
 
 
 const dialogEvento = ref(false)
@@ -298,19 +324,23 @@ const acciones = [
 
           if (resultado.motivo === "Impresión") {
             await registrarFaseQA(
-              {idDetalle: formDataNFC.value.id_Detalle,
+              {
+                idDetalle: formDataNFC.value.id_Detalle,
                 idFase: 4,
-                comentario: resultado.comentario})
-            console.log(formDataNFC.value.id_Detalle,resultado.comentario)
+                comentario: resultado.comentario
+              })
+            console.log(formDataNFC.value.id_Detalle, resultado.comentario)
 
             console.log("ingreso a la opcion de falla impresion")
             await obtenerOrdenPendiente(usuario.value.usuarioId)
             cargaOrden()
 
           } else {
-            await registrarFaseQA({idDetalle: formDataNFC.value.id_Detalle,
-                idFase: 5,
-                comentario: resultado.comentario})
+            await registrarFaseQA({
+              idDetalle: formDataNFC.value.id_Detalle,
+              idFase: 5,
+              comentario: resultado.comentario
+            })
 
             console.log("Ingreso a la opcion de programacion ")
             await obtenerOrdenPendiente(usuario.value.usuarioId)
@@ -335,7 +365,7 @@ const acciones = [
   {
     label: '📦 Finalizar', valor: 'entregar', fase: [1],
     funcion: async () => {
-     
+
       //reiniciar formulario
       localStorage.removeItem("ordenPendiente")
       formDataNFC.value = {
@@ -353,6 +383,8 @@ const acciones = [
         id_Detalle: 0,
         fase_actual: 0,
         domicilio: 0,
+        fill1: 0,
+        fill2: 0,
       };
       mostrarFormulario.value = false
       dialogEvento.value = true
@@ -388,9 +420,11 @@ const imprimirFotos = () => {
       anverso: `data:image/png;base64,${anverso}`,
       reverso: `data:image/png;base64,${reverso}`,
       orden: formDataNFC.value.id_orden,
-      rotationDegFront: rotation.value || 0,
-      rotationDegBack: rotation2.value || 0,
-      titulo: "Carnet – Llavero",
+      fill1: formDataNFC.value.fill1,
+      fill2: formDataNFC.value.fill2,
+      esVertical: esVertical.value,
+      esVertical2: esVertical2.value,
+      titulo: "Imagenes Llavero",
     });
 
     // 🖨️ Abrir ventana e imprimir
@@ -447,6 +481,8 @@ const formDataNFC = ref({
   id_Detalle: 0,
   fase_actual: 0,
   domicilio: 0,
+  fill1: 0,
+  fill2: 0,
 
 })
 
@@ -516,12 +552,13 @@ const handleMenuClick = async (item) => {
     dialogEvento.value = true
     loadingEvento.value = true
     dialogState.value = ""
-    dialogMessage.value = "" 
+    dialogMessage.value = ""
 
     // Llamar al backend para obtener orden pendiente
     ordenPendiente.value = await obtenerOrdenPendiente(usuario.value.usuarioId)
     //ordenes.value = await ordenCliente(usuario.value.usuarioId);
-    console.log("ordenes paso", ordenes.value)
+    console.log("ordenes paso", ordenPendiente.value)
+
 
     // 🔍 Si no hay datos (null, undefined o vacío), cerrar el diálogo y salir
     if (!ordenPendiente.value) {
@@ -531,20 +568,24 @@ const handleMenuClick = async (item) => {
 
       return
     }
+
     formDataNFC.value = ordenPendiente.value
+
+    const resultado = await analizarBase64(formDataNFC.value.foto_anverso)
+    esVertical.value = resultado.esVertical
+    const resultado2 = await analizarBase64(formDataNFC.value.foto_reverso)
+    esVertical2.value = resultado2.esVertical
+
+    console.log("es vertical", resultado)
+
+    console.log("orden foto anverso", formDataNFC.value.foto_anverso)
 
 
     console.log("Fase actual", formDataNFC.value.fase_actual)
-    if(formDataNFC.value.fase_actual === 3){
-       await avanzarFaseOrden(formDataNFC.value.id_Detalle);
-       console.log("Fase actual", formDataNFC.value.fase_actual)
+    if (formDataNFC.value.fase_actual === 3) {
+      await avanzarFaseOrden(formDataNFC.value.id_Detalle);
+      console.log("Fase actual", formDataNFC.value.fase_actual)
     }
-
-   
-    
-
-    // Si hay datos, continuar con el flujo normal
-   
 
     // Mostrar formulario
     loadingEvento.value = false
@@ -556,17 +597,22 @@ const handleMenuClick = async (item) => {
   }
 }
 
-async function cargaOrden(datos) {
-   const datosGuardados = datos
-    if (datosGuardados) {
-      formDataNFC.value = datos.value
-      console.log("📦 Datos form:", formDataNFC.value)
-    }
+async function validarIMG(base64db) {
 
-    orden.value = formDataNFC.value.id_orden
-    console.log("✅ Datos de orden:", ordenPendiente.value)
-    console.log("Valor de fase ", formDataNFC.value.fase_actual)
-  
+
+}
+
+async function cargaOrden(datos) {
+  const datosGuardados = datos
+  if (datosGuardados) {
+    formDataNFC.value = datos.value
+    console.log("📦 Datos form:", formDataNFC.value)
+  }
+
+  orden.value = formDataNFC.value.id_orden
+  console.log("✅ Datos de orden:", ordenPendiente.value)
+  console.log("Valor de fase ", formDataNFC.value.fase_actual)
+
 }
 
 // 🔹 Escritura NFC

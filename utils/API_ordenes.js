@@ -1,6 +1,7 @@
 import { UrlWithApiRD, ENDPOINTS } from "../Service/apiConfig"
 
 
+
 export async function obtenerOrdenPendiente(operadorId) {
   try {
     const endpoint = ENDPOINTS.obtenerOrdenOP.replace("{operador}", operadorId)
@@ -33,6 +34,8 @@ export async function obtenerOrdenPendiente(operadorId) {
       id_Detalle: data.id_Detalle,
       fase_actual: data.fase_actual,
       domicilio: data.entrega_domicilio,
+      fill1: data.fill1,
+      fill2: data.fill2,
     }
 
     //localStorage.setItem("ordenPendiente", JSON.stringify(datosReducidos))

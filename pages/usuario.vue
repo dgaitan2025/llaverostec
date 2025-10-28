@@ -10,7 +10,7 @@
       <p>Aquí podrás crear tu llavero.</p>
     </div>
     <v-form ref="formNFC">
-      <div v-if="mostrarFormulario" class="pa-6 text-center">
+      <div v-if="mostrarFormulario" class="pa-6 mx-auto text-center" style="max-width: 600px;">
         <!-- Selector de tipo de dato -->
 
         <v-select v-model="formDataNFC.id_tipo_grabado" :items="[
@@ -23,7 +23,7 @@
 
         <div v-if="formDataNFC.id_tipo_grabado === 1">
           <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url"
-            :rules="[v => !!v || 'La URL es obligatoria', , v => esURLValida(v) || 'URL válida invalida, falta http: o https:']"></v-text-field>
+            :rules="[v => !!v || 'La URL es obligatoria', v => esURLValida(v) || 'URL válida invalida, falta http: o https:']"></v-text-field>
         </div>
 
         <div v-else-if="formDataNFC.id_tipo_grabado === 2">
@@ -34,8 +34,8 @@
         </div>
 
         <!-- Tomar Foto -->
-        <v-select v-model="opcionFoto" :items="['Tomar Foto', 'Subir Archivo']" label="Fotografia Anverso"
-          prepend-icon="mdi-camera" @update:model-value="manejarSeleccionFoto" />
+        <v-select v-model="opcionFoto" :items="subirImagen" label="Fotografia Anverso" prepend-icon="mdi-camera"
+          @update:model-value="manejarSeleccionFoto" />
 
         <v-dialog v-model="dialog" max-width="600" persistent>
           <v-card>
@@ -50,63 +50,94 @@
           </v-card>
         </v-dialog>
 
-        <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="mostrarPreview1" />
+        <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="orientacioIMG" />
 
         <!-- Primera foto -->
         <div v-if="formDataNFC.foto_anverso" style="text-align:center; margin-top:8px;">
           <!-- Marco fijo -->
-          <div ref="marcoFrontalRef"
-            style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+          <div class="mx-auto mt-6 position-relative" :style="{
+            width: esVertical ? '3.4cm' : '4.9cm',
+            height: esVertical ? '4.9cm' : '3.4cm',
+            border: '1px solid #000',
+            background: '#fff',
+            overflow: 'hidden',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'relative',
+            transition: 'all 0.3s ease',
+          }">
             <!-- Imagen -->
             <img :src="`data:image/png;base64,${formDataNFC.foto_anverso}`" :style="{
-              transform: `rotate(${rotation}deg)`,
-
-              objectFit: 'contain',
-              display: 'block',
-
-              width: rotation === 0 || rotation === 180 ? 'auto' : 'auto',
-
-              height: rotation === 0 || rotation === 180 ? '100%' : '100%'
+              width: '100%',
+              height: '100%',
+              objectFit: estirar ? 'fill' : 'contain',
+              transition: 'transform 0.3s ease',
             }" />
-          </div>
 
-          <!-- Botón para rotar -->
-          <v-btn v-if="false" color="primary" size="small" class="mt-4" @click="rotarImagen" disable>
-            Rotar
-          </v-btn>
+
+          </div>
+          <!-- Checkbox centrado -->
+          <v-row justify="center" class="mt-2 align-center">
+            <v-col cols="auto">
+              <v-checkbox v-model="estirar" label="Estirar imagen al marco." hide-details density="compact" />
+            </v-col>
+            <v-col cols="auto">
+              <v-tooltip text="Su imagen será eliminada después de la entrega del llavero.">
+                <template #activator="{ props }">
+                  <v-icon v-bind="props" color="primary">mdi-information</v-icon>
+                </template>
+              </v-tooltip>
+            </v-col>
+          </v-row>
+
         </div>
 
         <!-- Segunda foto -->
-        <v-select v-model="opcionFoto2" :items="['Tomar Foto 2', 'Subir Archivo 2']" label="Fotografia Reverso"
-          prepend-icon="mdi-camera" @update:model-value="manejarSeleccionFoto" />
+        <v-select v-model="opcionFoto2" :items="subirImagen2" label="Fotografia Reverso" prepend-icon="mdi-camera" 
+          @update:model-value="manejarSeleccionFoto" />
 
-        <input ref="fileInput2" type="file" accept="image/*" style="display:none" @change="mostrarPreview2" />
+        <input ref="fileInput2" type="file" accept="image/*" style="display:none" @change="orientacioIMG2" />
 
         <div v-if="formDataNFC.foto_reverso" style="text-align:center; margin-top:8px;">
           <!-- Marco fijo -->
-          <div ref="marcoReversoRef"
-            style="width:3.5cm; height:4.5cm; border:1px solid #000; overflow:hidden; margin:auto; display:flex; align-items:center; justify-content:center;">
+          <div class="mx-auto mt-6 position-relative" :style="{
+            width: esVertical2 ? '3.4cm' : '4.9cm',
+            height: esVertical2 ? '4.9cm' : '3.4cm',
+            border: '1px solid #000',
+            background: '#fff',
+            overflow: 'hidden',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'relative',
+            transition: 'all 0.3s ease',
+          }">
             <!-- Imagen -->
             <img :src="`data:image/png;base64,${formDataNFC.foto_reverso}`" :style="{
-              transform: `rotate(${rotation2}deg)`,
-
-              objectFit: 'contain',
-              display: 'block',
-
-              width: rotation2 === 0 || rotation2 === 180 ? 'auto' : 'auto',
-
-              height: rotation2 === 0 || rotation2 === 180 ? '100%' : '100%'
+              width: '100%',
+              height: '100%',
+              objectFit: estirar2 ? 'fill' : 'contain',
+              transition: 'transform 0.3s ease',
             }" />
           </div>
+          <v-row justify="center" class="mt-2 align-center">
+            <v-col cols="auto">
+              <v-checkbox v-model="estirar2" label="Estirar imagen al marco." hide-details density="compact" />
+            </v-col>
 
-          <!-- Botón para rotar -->
-          <v-btn v-if="false" color="primary" size="small" class="mt-4" @click="rotarImagen2">
-            Rotar
-          </v-btn>
+            <v-col cols="auto">
+              <v-tooltip text="Su imagen será eliminada después de la entrega del llavero.">
+                <template #activator="{ props }">
+                  <v-icon v-bind="props" color="primary">mdi-information</v-icon>
+                </template>
+              </v-tooltip>
+            </v-col>
+          </v-row>
         </div>
 
-        <v-select v-model="formDataNFC.id_Tipo_Pago" :items="itemsPago" item-title="text" item-value="value" label="Método de pago"
-          :rules="[v => !!v || 'Selecciona un método de pago']" />
+        <v-select v-model="formDataNFC.id_Tipo_Pago" :items="itemsPago" item-title="text" item-value="value"
+          label="Método de pago" :rules="[v => !!v || 'Selecciona un método de pago']" />
 
         <v-select v-model="formDataNFC.entrega" :items="itemsEntrega" label="Entrega"
           :rules="[v => !!v || 'Selecciona el tipo de entrega']" />
@@ -125,9 +156,12 @@
 
           <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre"
             :rules="[v => !!v || 'El nombre de entrega es obligatorio']"></v-text-field>
-          <v-text-field v-model="formDataNFC.telefono" label="Telefono"
-            :rules="[v => !!v || 'El teléfono de entrega es obligatorio']"></v-text-field>
-          
+          <v-text-field v-model="formDataNFC.telefono" label="Teléfono" type="text" inputmode="numeric" maxlength="8"
+            counter="8" :rules="[
+              v => !!v || 'El teléfono es obligatorio',
+              v => v.length === 8 || 'Debe tener exactamente 8 dígitos'
+            ]" @input="limitarTelefono" />
+
         </div>
 
 
@@ -196,13 +230,46 @@ import { abrirCamara, cerrarCamara, tomarFaceID, } from "../utils/camara"
 import { previewPhoto } from "../utils/stickers"
 import { UrlWithApiRD, ENDPOINTS } from "../Service/apiConfig"
 import dialogStatus from "../components/dialogStatus.vue"
-import html2canvas from "html2canvas";
 import { startConnection, on, connection } from "../utils/signalr";
 import { watch } from "vue"
 import OrdenCard from "../components/cardDash.vue"
-import { ordenCliente } from "../utils/API_ordenes"
+import { ordenCliente, obtenerOrdenFinalizadas } from "../utils/API_ordenes"
 import CardGrabado from "../components/cardProdFinalizado.vue"
 import { crearCheckout } from "../utils/Pago_recurrenteTC"
+
+const estirar = ref(false) // <--- nuevo checkbox
+const estirar2 = ref(false) // <--- nuevo checkbox
+import { analizarImagen } from "../utils/ResizeImg"
+
+const limitarTelefono = (e) => {
+  // elimina cualquier carácter no numérico y corta a 8 dígitos
+  const valor = e.target.value.replace(/\D/g, '').slice(0, 8)
+  e.target.value = valor
+  formDataNFC.value.telefono = valor
+}
+
+const esVertical = ref(false)
+const esVertical2 = ref(false)
+
+const orientacioIMG = async (event) => {
+  const resultado = await analizarImagen(event)
+  if (!resultado) {
+    alert("no es una imagen")
+    return
+  }
+  formDataNFC.value.foto_anverso = resultado.base64Puro
+  esVertical.value = resultado.esVertical
+}
+
+const orientacioIMG2 = async (event) => {
+  const resultado = await analizarImagen(event)
+  if (!resultado) {
+    alert("no es una imagen")
+    return
+  }
+  formDataNFC.value.foto_reverso = resultado.base64Puro
+  esVertical2.value = resultado.esVertical
+}
 
 
 const checkoutUrl = ref(null);
@@ -231,7 +298,7 @@ onMounted(async () => {
   // 👉 Define el listener
   connectionListener = async (payload) => {
     console.log("📡 Datos recibidos:", payload);
-    
+
     if (itemSelect.value === "dashboard") {
       ordenes.value = await ordenCliente(usuario.value.usuarioId);
 
@@ -355,43 +422,13 @@ function esURLValida(valor) {
 }
 
 
-// Función para rotar
-const rotarImagen = () => {
-  rotation.value = (rotation.value + 90) % 360 // rota en pasos de 90°
-  //capturarImagen(marcoFrontalRef, 'frontal')
-  console.log(rotation)
-}
-
-const rotarImagen2 = async () => {
-
-  rotation2.value = (rotation2.value + 90) % 360 // rota en pasos de 90°
-  console.log(rotation)
-}
 
 
-const marcoFrontalRef = ref(null);
-const marcoReversoRef = ref(null);
 
-const capturarImagen = async (marcoRef, tipo) => {
-  if (marcoRef.value) {
-    const canvas = await html2canvas(marcoRef.value, {
-      useCORS: true,
-      scale: 2
-    });
-
-    const dataUrl = canvas.toDataURL("image/png");
-    if (tipo === "frontal") {
-      formDataNFC.value.foto_anverso = dataUrl.split(",")[1];
-    } else if (tipo === "reverso") {
-      formDataNFC.value.foto_reverso = dataUrl.split(",")[1];
-    }
-    console.log(`📸 Capturada ${tipo}:`, dataUrl);
-  }
-}
 //Formulario de NFC
 const formDataNFC = ref({
   id_Usuario: 0,
-  id_Tipo_Pago: "Seleccione tipo de pago Q 10.00",
+  id_Tipo_Pago: "Seleccione Metodo pago",
   fecha: getFechaActual(), // siempre formato YYYY-MM-DD
   total: 10,
   persona_Entregar: "",
@@ -472,8 +509,6 @@ const guardarNFC = async () => {
   loadingEvento.value = true
   dialogState.value = ""
   dialogMessage.value = ""
-  capturarImagen(marcoFrontalRef, 'frontal')
-  capturarImagen(marcoReversoRef, 'reverso')
 
   try {
     const orden = {
@@ -498,6 +533,8 @@ const guardarNFC = async () => {
         link: formDataNFC.value.link || "",
         nombre: formDataNFC.value.nombre,
         telefono_detalle: formDataNFC.value.telefono_detalle,
+        fill_img1: estirar.value,
+        fill_img2: estirar2.value
       }])
     }
 
@@ -544,9 +581,7 @@ const guardarNFC = async () => {
     console.log("Datos de form", formDataNFC.value)
     console.log("Datos de form2", orden)
     formDataNFC.value.fotografia = previewPhoto.value
-    // 1️⃣ Guardar en localStorage
-    localStorage.setItem("formDataNFC", JSON.stringify(formDataNFC.value))
-    //alert("✅ Datos guardados en localStorage")
+
 
     // 2️⃣ Resetear campos
     formDataNFC.value = {
@@ -583,6 +618,14 @@ const guardarNFC = async () => {
     //limpia las variables 
     formDataNFC.value.foto_anverso = "";
     formDataNFC.value.foto_reverso = "";
+    esVertical2.value = false;
+    esVertical.value = false;
+    estirar.value = false
+    estirar2.value = false
+    ordenes.value = await ordenCliente(usuario.value.usuarioId)
+    itemSelect.value = "dashboard"
+    mostrardashboard.value = true;
+    mostrarFormulario.value = false
 
     // 3️⃣ Limpiar preview/canvas
     previewPhoto.value = null
@@ -591,6 +634,10 @@ const guardarNFC = async () => {
       ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
     }
   } catch (error) {
+    loadingEvento.value = false
+    dialogState.value = "error"
+    dialogMessage.value = "Error al comunicar con api"
+    cierre.value = 2000
     console.error("❌ Error al guardar en localStorage:", error)
   }
 }
@@ -600,8 +647,8 @@ const manejarSeleccionFoto = (valor) => {
   if (valor === 'Tomar Foto') {
     fotoActual.value = "foto_anverso"
     onAbrirCamara()  // 👈 tu función existente
-    previewPhoto1.value = formDataNFC.value.fotografia
-    console.log("Ese es el preview 1", previewPhoto1)
+    //previewPhoto1.value = formDataNFC.value.fotografia
+    //console.log("Ese es el preview 1", previewPhoto1)
     opcionFoto.value = null
   }
   else if (valor === 'Subir Archivo') {
@@ -637,10 +684,7 @@ const onCerrarCamara = () => {
 const onTomarFoto = async () => {
   await tomarFaceID(videoRef, formDataNFC, fotoActual.value, () => {
     cerrarCamara(dialog)
-    previewPhoto1.value = formDataNFC.value.fotografia  // ✅ usar lo que ya guardó
-    console.log("foto a ver " + previewPhoto.value)
-    formDataNFC.value = { ...formDataNFC.value }
-    console.log("📸 Foto capturada en:", formDataNFC.value[fotoActual.value])
+
   })
 }
 
@@ -648,9 +692,6 @@ const onTomarFoto = async () => {
 const mostrarFormulario = ref(false)
 const router = useRouter()
 const dialogFoto = ref(false)
-const fotoCapturada = ref(null)
-const nombre = ref("")  // ✅ agregado para evitar warning
-const email = ref("")   // ✅ agregado para evitar warning
 const mostrardashboard = ref(false)
 const mostrarCardFinalizados = ref(false)
 const listaGrabados = ref([]);
@@ -762,30 +803,6 @@ async function handleMenuClick(item) {
 const fileInput2 = ref(null)
 const opcionFoto2 = ref(null)
 
-const mostrarPreview2 = (e) => {
-  const file = e.target.files[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      formDataNFC.value.foto_reverso = ev.target.result.split(",")[1]
-
-    }
-    reader.readAsDataURL(file)
-  }
-}
-
-const mostrarPreview1 = (e) => {
-  const file = e.target.files[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      formDataNFC.value.foto_anverso = ev.target.result.split(",")[1]
-
-    }
-    reader.readAsDataURL(file)
-  }
-}
-
 
 const itemsPago = [
   // { text: 'Tarjeta Q 15.00', value: 1 }, // <-- comentario válido aquí
@@ -794,10 +811,20 @@ const itemsPago = [
 ];
 
 const itemsEntrega = [
-//'Presencial', 
-//'Domicilio',
-'Interior colegio Mixto Belen'
+  //'Presencial', 
+  //'Domicilio',
+  'Interior colegio Mixto Belen'
 ];
+const subirImagen = [
+  // 'Tomar Foto', 
+  'Subir Archivo'
+]
+
+const subirImagen2 = [
+
+  //'Tomar Foto 2', 
+  'Subir Archivo 2'
+]
 
 
 </script>

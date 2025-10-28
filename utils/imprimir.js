@@ -1,6 +1,14 @@
-export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront = 0, rotationDegBack = 0, titulo = "Impresión" }) {
+export function generarHtmlImpresion({ anverso, reverso, orden, fill1, fill2, esVertical, esVertical2, titulo = "Impresión" }) {
   // Usamos cm para respetar el tamaño físico al imprimir
   // 3.5cm x 4.5cm como pediste, con un pequeño “marco” para corte.
+  const objectFitMode = fill1 ? "fill" : "contain";
+  const objectFitModeR = fill2 ? "fill" : "contain";
+
+  var widthSlot2 = esVertical2 ? "3.4cm" : "4.9cm";
+  var heightSlot2 = esVertical2 ? "4.9cm" : "3.4cm";
+
+  var widthSlot1 = esVertical ? "3.4cm" : "4.9cm";
+  var heightSlot1 = esVertical ? "4.9cm" : "3.4cm";
   return `
 <!DOCTYPE html>
 <html lang="es">
@@ -27,7 +35,15 @@ export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront
     align-items: start;
   }
   .card {
-    width: 4.1cm; /* 3.4 + 0.3 bleed por lado aprox visual */
+    width: ${widthSlot1}; /* 3.4 + 0.3 bleed por lado aprox visual */
+    padding: 3mm;
+    border: 0.5pt solid #999;
+    border-radius: 2mm;
+    text-align: center;
+  }
+
+    .card2 {
+    width: ${widthSlot2}; /* 3.4 + 0.3 bleed por lado aprox visual */
     padding: 3mm;
     border: 0.5pt solid #999;
     border-radius: 2mm;
@@ -38,8 +54,8 @@ export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront
     margin: 0 0 6mm 0;
   }
   .slot {
-    width: 3.4cm;
-    height: 4.8cm;
+    width: ${widthSlot1};
+    height: ${heightSlot1};
     margin: 0 auto;
     border: 0.5pt dashed #666; /* guía de corte */
     display: flex;
@@ -52,7 +68,28 @@ export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront
     /* que llene el rectángulo sin deformarse */
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: ${objectFitMode};
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    transform-origin: center center;
+  }
+
+  .slotR {
+    width: ${widthSlot2};
+    height: ${heightSlot2};
+    margin: 0 auto;
+    border: 0.5pt dashed #666; /* guía de corte */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #fff;
+  }
+  .slotR img {
+    /* que llene el rectángulo sin deformarse */
+    width: 100%;
+    height: 100%;
+    object-fit: ${objectFitModeR};
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
     transform-origin: center center;
@@ -67,7 +104,7 @@ export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront
   .crop {
     position: relative;
     width: 3.4cm;
-    height: 4.8cm;
+    height: 4.9cm;
   }
   .crop:before, .crop:after {
     content: "";
@@ -106,18 +143,18 @@ export function generarHtmlImpresion({ anverso, reverso, orden, rotationDegFront
     <div class="card">
       <h2 class="title">Anverso, orden ${orden}</h2>
       <div class="slot">
-        <img src="${anverso}" alt="Anverso" style="transform: rotate(${rotationDegFront}deg);" />
+        <img src="${anverso}" alt="Anverso"  />
       </div>
-      <div class="label">3.4 cm × 4.8 cm</div>
+      <div class="label">3.4 cm × 4.9 cm</div>
     </div>
 
     <!-- REVERSO -->
-    <div class="card">
+    <div class="card2">
       <h2 class="title">Reverso, orden ${orden} </h2>
-      <div class="slot">
-        <img src="${reverso}" alt="Reverso" style="transform: rotate(${rotationDegBack}deg);" />
+      <div class="slotR">
+        <img src="${reverso}" alt="Reverso"  />
       </div>
-      <div class="label">3.4 cm × 4.8 cm</div>
+      <div class="label">3.4 cm × 4.9 cm</div>
     </div>
   </div>
 

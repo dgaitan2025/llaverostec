@@ -9,13 +9,9 @@
         md="4"
         lg="3"
       >
-        <v-card class="mx-auto" elevation="4" rounded="xl" min-height="350">
+        <v-card class="mx-auto" elevation="4" rounded="xl" min-height="200">
           <!-- 🟢 Corrige el src de imagen -->
-          <v-img
-            :src="getImageSrc(item.foto_Anverso)"
-            height="200"
-            cover
-          ></v-img>
+          
 
           <v-card-title class="text-center">
             <v-chip color="indigo" text-color="white">
@@ -101,4 +97,9 @@ function formatLink(link) {
   justify-content: space-between; /* distribuye imagen y texto */
   height: 420px; /* puedes ajustar */
 }
+
+
 </style>
+
+
+

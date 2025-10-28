@@ -71,6 +71,7 @@ onMounted(async () => {
   // 👉 Define el listener
   connectionListener = async (payload) => {
     console.log("📡 Datos recibidos:", payload);
+    console.log("item select", itemSelect.value)
     if (itemSelect.value === "pendientesmostrador") {
       ordenes.value = await ordenPendienteEntrega()
 
