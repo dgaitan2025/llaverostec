@@ -11,181 +11,328 @@
     </div>
     <v-form ref="formNFC">
       <div v-if="mostrarFormulario" class="pa-6 mx-auto text-center" style="max-width: 600px;">
-        <!-- Selector de tipo de dato -->
 
-        <v-select v-model="formDataNFC.id_tipo_grabado" :items="[
+        <v-select v-model="formDataNFC.tipo_llavero" :items="[
           { text: 'URL', value: 1 },
           { text: 'Contacto', value: 2 },
+          { text: 'Documentos vehiculares', value: 3 }
 
         ]" item-title="text" item-value="value" label="Grabador de NFC"
           :rules="[v => !!v || 'Selecciona un tipo de grabado']" />
-        <!-- Campos condicionales -->
 
-        <div v-if="formDataNFC.id_tipo_grabado === 1">
-          <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url"
-            :rules="[v => !!v || 'La URL es obligatoria', v => esURLValida(v) || 'URL válida invalida, falta http: o https:']"></v-text-field>
-        </div>
+        <!-- Selector de tipo de dato -->
 
-        <div v-else-if="formDataNFC.id_tipo_grabado === 2">
-          <v-text-field v-model="formDataNFC.nombre" label="Nombre"
-            :rules="[v => !!v || 'El nombre es obligatorio']"></v-text-field>
-          <v-text-field v-model="formDataNFC.telefono_detalle" label="Telefono"
-            :rules="[v => !!v || 'El teléfono es obligatorio']"></v-text-field>
-        </div>
+        <div v-if="formDataNFC.tipo_llavero === 3">
+          <div v-if="formDataNFC.id_tipo_grabado === 1">
+            <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url"
+              :rules="[v => !!v || 'La URL es obligatoria', v => esURLValida(v) || 'URL válida invalida, falta http: o https:']"></v-text-field>
+          </div>
+          <v-select v-model="modo1" :items="['Placa', 'Subir imagen']" label="Seleccionar foto anverso" outlined
+            class="mb-4"></v-select>
 
-        <!-- Tomar Foto -->
-        <v-select v-model="opcionFoto" :items="subirImagen" label="Fotografia Anverso" prepend-icon="mdi-camera"
-          @update:model-value="manejarSeleccionFoto" />
+          <v-text-field v-if="modo1 === 'Placa'" v-model="placa" label="Ingrese la placa" outlined
+            placeholder="Ej: M 767KHJ" prepend-inner-icon="mdi-car" @input="formatearPlaca"
+            :rules="[validarPlaca]"></v-text-field>
 
-        <v-dialog v-model="dialog" max-width="600" persistent>
-          <v-card>
-            <v-card-title>Tomar Foto</v-card-title>
-            <v-card-text>
-              <video ref="videoRef" autoplay playsinline style="width:100%; border-radius:8px;" />
-            </v-card-text>
-            <v-card-actions>
-              <v-btn color="green" @click="onTomarFoto">Capturar</v-btn>
-              <v-btn color="red" @click="onCerrarCamara">Cancelar</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+          <v-file-input v-if="modo1 === 'Subir imagen'" label="Seleccionar imagen 1" accept="image/*" v-model="archivo"
+            @change="orientacioIMG" prepend-icon="mdi-image"></v-file-input>
 
-        <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="orientacioIMG" />
+          <!-- Primera foto -->
+          <div v-if="formDataNFC.foto_anverso" style="text-align:center; margin-top:8px;">
+            <!-- Marco fijo -->
+            <div class="mx-auto mt-6 position-relative" :style="{
+              width: esVertical ? '3.4cm' : '4.9cm',
+              height: esVertical ? '4.9cm' : '3.4cm',
+              border: '1px solid #000',
+              background: '#fff',
+              overflow: 'hidden',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'relative',
+              transition: 'all 0.3s ease',
+            }">
+              <!-- Imagen -->
+              <img :src="`data:image/png;base64,${formDataNFC.foto_anverso}`" :style="{
+                width: '100%',
+                height: '100%',
+                objectFit: estirar ? 'fill' : 'contain',
+                transition: 'transform 0.3s ease',
+              }" />
 
-        <!-- Primera foto -->
-        <div v-if="formDataNFC.foto_anverso" style="text-align:center; margin-top:8px;">
-          <!-- Marco fijo -->
-          <div class="mx-auto mt-6 position-relative" :style="{
-            width: esVertical ? '3.4cm' : '4.9cm',
-            height: esVertical ? '4.9cm' : '3.4cm',
-            border: '1px solid #000',
-            background: '#fff',
-            overflow: 'hidden',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            position: 'relative',
-            transition: 'all 0.3s ease',
-          }">
-            <!-- Imagen -->
-            <img :src="`data:image/png;base64,${formDataNFC.foto_anverso}`" :style="{
-              width: '100%',
-              height: '100%',
-              objectFit: estirar ? 'fill' : 'contain',
-              transition: 'transform 0.3s ease',
-            }" />
 
+            </div>
+            <!-- Checkbox centrado -->
+            <v-row justify="center" class="mt-2 align-center">
+              <v-col cols="auto">
+                <v-checkbox v-model="estirar" label="Redimensionar imagen." hide-details density="compact" />
+              </v-col>
+              <v-col cols="auto">
+                <v-icon color="primary" @click="mostrar = true">mdi-information</v-icon>
+
+                <v-dialog v-model="mostrar" max-width="280">
+                  <v-card class="pa-3 text-center">
+                    <v-card-text>
+                      Su imagen será eliminada después de la entrega del llavero.
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-btn text color="primary" @click="mostrar = false">Entendido</v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
+              </v-col>
+            </v-row>
 
           </div>
-          <!-- Checkbox centrado -->
-          <v-row justify="center" class="mt-2 align-center">
-            <v-col cols="auto">
-              <v-checkbox v-model="estirar" label="Redimensionar imagen." hide-details
-                density="compact" />
-            </v-col>
-            <v-col cols="auto">
-              <v-icon color="primary" @click="mostrar = true">mdi-information</v-icon>
 
-              <v-dialog v-model="mostrar" max-width="280">
-                <v-card class="pa-3 text-center">
-                  <v-card-text>
-                    Su imagen será eliminada después de la entrega del llavero.
-                  </v-card-text>
-                  <v-card-actions>
-                    <v-btn text color="primary" @click="mostrar = false">Entendido</v-btn>
-                  </v-card-actions>
-                </v-card>
-              </v-dialog>
-            </v-col>
-          </v-row>
 
-        </div>
 
-        <!-- Segunda foto -->
-        <v-select v-model="opcionFoto2" :items="subirImagen2" label="Fotografia Reverso" prepend-icon="mdi-camera"
-          @update:model-value="manejarSeleccionFoto" />
+          <v-select v-model="modo2" :items="['Placa', 'Subir imagen']" label="Seleccionar foto reverso" outlined
+            class="mb-4"></v-select>
 
-        <input ref="fileInput2" type="file" accept="image/*" style="display:none" @change="orientacioIMG2" />
+          <v-text-field v-if="modo2 === 'Placa'" v-model="placa" label="Seleccionar imagen 2" outlined
+            placeholder="Ej: M 767KHJ" prepend-inner-icon="mdi-car" @input="formatearPlaca"
+            :rules="[validarPlaca]"></v-text-field>
 
-        <div v-if="formDataNFC.foto_reverso" style="text-align:center; margin-top:8px;">
-          <!-- Marco fijo -->
-          <div class="mx-auto mt-6 position-relative" :style="{
-            width: esVertical2 ? '3.4cm' : '4.9cm',
-            height: esVertical2 ? '4.9cm' : '3.4cm',
-            border: '1px solid #000',
-            background: '#fff',
-            overflow: 'hidden',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            position: 'relative',
-            transition: 'all 0.3s ease',
-          }">
-            <!-- Imagen -->
-            <img :src="`data:image/png;base64,${formDataNFC.foto_reverso}`" :style="{
-              width: '100%',
-              height: '100%',
-              objectFit: estirar2 ? 'fill' : 'contain',
-              transition: 'transform 0.3s ease',
-            }" />
+          <v-file-input v-if="modo2 === 'Subir imagen'" label="Seleccionar imagen" accept="image/*" v-model="archivo"
+            @change="orientacioIMG2" prepend-icon="mdi-image"></v-file-input>
+
+          <div v-if="formDataNFC.foto_reverso" style="text-align:center; margin-top:8px;">
+            <!-- Marco fijo -->
+            <div class="mx-auto mt-6 position-relative" :style="{
+              width: esVertical2 ? '3.4cm' : '4.9cm',
+              height: esVertical2 ? '4.9cm' : '3.4cm',
+              border: '1px solid #000',
+              background: '#fff',
+              overflow: 'hidden',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'relative',
+              transition: 'all 0.3s ease',
+            }">
+              <!-- Imagen -->
+              <img :src="`data:image/png;base64,${formDataNFC.foto_reverso}`" :style="{
+                width: '100%',
+                height: '100%',
+                objectFit: estirar2 ? 'fill' : 'contain',
+                transition: 'transform 0.3s ease',
+              }" />
+            </div>
+            <v-row justify="center" class="mt-2 align-center">
+              <v-col cols="auto">
+                <v-checkbox v-model="estirar2" label="Redimensionar imagen." hide-details density="compact" />
+              </v-col>
+
+              <v-col cols="auto">
+                <v-icon color="primary" @click="mostrar = true">mdi-information</v-icon>
+
+                <v-dialog v-model="mostrar" max-width="280">
+                  <v-card class="pa-3 text-center">
+                    <v-card-text>
+                      Su imagen será eliminada después de la entrega del llavero.
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-btn text color="primary" @click="mostrar = false">Entendido</v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
+              </v-col>
+            </v-row>
           </div>
-          <v-row justify="center" class="mt-2 align-center">
-            <v-col cols="auto">
-              <v-checkbox v-model="estirar2" label="Redimensionar imagen." hide-details
-                density="compact" />
-            </v-col>
 
-            <v-col cols="auto">
-              <v-icon color="primary" @click="mostrar = true">mdi-information</v-icon>
+          <v-number-input v-model="formDataNFC.cantidad" label="Cantidad max. 25" :min="1" :max="25" control-variant="split" :rules="[
+            v => v > 0 || 'Debe ser mayor que 0',
+            v => v <= 25 || 'Máximo permitido: 25'
+          ]" class="mb-6" />
 
-              <v-dialog v-model="mostrar" max-width="280">
-                <v-card class="pa-3 text-center">
-                  <v-card-text>
-                    Su imagen será eliminada después de la entrega del llavero.
-                  </v-card-text>
-                  <v-card-actions>
-                    <v-btn text color="primary" @click="mostrar = false">Entendido</v-btn>
-                  </v-card-actions>
-                </v-card>
-              </v-dialog>
-            </v-col>
-          </v-row>
+          <v-select v-model="formDataNFC.id_Tipo_Pago" :items="itemsPago" item-title="text" item-value="value"
+            label="Método de pago" :rules="[v => !!v || 'Selecciona un método de pago']" />
+
+
+
+          <v-select v-model="formDataNFC.entrega" :items="itemsEntrega" label="Entrega"
+            :rules="[v => !!v || 'Selecciona el tipo de entrega']" />
+
+          <div v-if="formDataNFC.entrega === 'Domicilio'">
+
+            <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre"
+              :rules="[v => !!v || 'El nombre de entrega es obligatorio']"></v-text-field>
+            <v-text-field v-model="formDataNFC.telefono" label="Telefono"
+              :rules="[v => !!v || 'El teléfono de entrega es obligatorio']"></v-text-field>
+            <v-text-field v-model="formDataNFC.direccion_entrega" label="Direccion"
+              :rules="[v => !!v || 'La dirección es obligatoria']"></v-text-field>
+          </div>
+
+          <div v-if="formDataNFC.entrega === 'Interior colegio Mixto Belen'">
+
+            <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre"
+              :rules="[v => !!v || 'El nombre de entrega es obligatorio']"></v-text-field>
+            <v-text-field v-model="formDataNFC.telefono" label="Teléfono" type="text" inputmode="numeric" maxlength="8"
+              counter="8" :rules="[
+                v => !!v || 'El teléfono es obligatorio',
+                v => v.length === 8 || 'Debe tener exactamente 8 dígitos'
+              ]" @input="limitarTelefono" />
+
+          </div>
+
+          <v-btn color="primary" size="small" class="mt-4" @click="validarFormulario">Solicitar</v-btn>
         </div>
 
-        <v-select v-model="formDataNFC.id_Tipo_Pago" :items="itemsPago" item-title="text" item-value="value"
-          label="Método de pago" :rules="[v => !!v || 'Selecciona un método de pago']" />
+        <div v-if="formDataNFC.tipo_llavero === 1 || formDataNFC.tipo_llavero === 2">
+          <!-- Campos condicionales -->
 
-        <v-select v-model="formDataNFC.entrega" :items="itemsEntrega" label="Entrega"
-          :rules="[v => !!v || 'Selecciona el tipo de entrega']" />
+          <div v-if="formDataNFC.id_tipo_grabado === 1">
+            <v-text-field v-model="formDataNFC.link" label="Ingresa la URL" type="url"
+              :rules="[v => !!v || 'La URL es obligatoria', v => esURLValida(v) || 'URL válida invalida, falta http: o https:']"></v-text-field>
+          </div>
 
-        <div v-if="formDataNFC.entrega === 'Domicilio'">
+          <div v-else-if="formDataNFC.id_tipo_grabado === 2">
+            <v-text-field v-model="formDataNFC.nombre" label="Nombre"
+              :rules="[v => !!v || 'El nombre es obligatorio']"></v-text-field>
+            <v-text-field v-model="formDataNFC.telefono_detalle" label="Telefono"
+              :rules="[v => !!v || 'El teléfono es obligatorio']"></v-text-field>
+          </div>
 
-          <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre"
-            :rules="[v => !!v || 'El nombre de entrega es obligatorio']"></v-text-field>
-          <v-text-field v-model="formDataNFC.telefono" label="Telefono"
-            :rules="[v => !!v || 'El teléfono de entrega es obligatorio']"></v-text-field>
-          <v-text-field v-model="formDataNFC.direccion_entrega" label="Direccion"
-            :rules="[v => !!v || 'La dirección es obligatoria']"></v-text-field>
+          <v-select v-model="opcionFoto" :items="subirImagen" label="Fotografia Anverso" prepend-icon="mdi-camera"
+            @update:model-value="manejarSeleccionFoto" />
+
+          <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="orientacioIMG" />
+
+          <!-- Primera foto -->
+          <div v-if="formDataNFC.foto_anverso" style="text-align:center; margin-top:8px;">
+            <!-- Marco fijo -->
+            <div class="mx-auto mt-6 position-relative" :style="{
+              width: esVertical ? '3.4cm' : '4.9cm',
+              height: esVertical ? '4.9cm' : '3.4cm',
+              border: '1px solid #000',
+              background: '#fff',
+              overflow: 'hidden',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'relative',
+              transition: 'all 0.3s ease',
+            }">
+              <!-- Imagen -->
+              <img :src="`data:image/png;base64,${formDataNFC.foto_anverso}`" :style="{
+                width: '100%',
+                height: '100%',
+                objectFit: estirar ? 'fill' : 'contain',
+                transition: 'transform 0.3s ease',
+              }" />
+
+
+            </div>
+            <!-- Checkbox centrado -->
+            <v-row justify="center" class="mt-2 align-center">
+              <v-col cols="auto">
+                <v-checkbox v-model="estirar" label="Redimensionar imagen." hide-details density="compact" />
+              </v-col>
+              <v-col cols="auto">
+                <v-icon color="primary" @click="mostrar = true">mdi-information</v-icon>
+
+                <v-dialog v-model="mostrar" max-width="280">
+                  <v-card class="pa-3 text-center">
+                    <v-card-text>
+                      Su imagen será eliminada después de la entrega del llavero.
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-btn text color="primary" @click="mostrar = false">Entendido</v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
+              </v-col>
+            </v-row>
+
+          </div>
+
+          <!-- Segunda foto -->
+          <v-select v-model="opcionFoto2" :items="subirImagen2" label="Fotografia Reverso" prepend-icon="mdi-camera"
+            @update:model-value="manejarSeleccionFoto" />
+
+          <input ref="fileInput2" type="file" accept="image/*" style="display:none" @change="orientacioIMG2" />
+
+          <div v-if="formDataNFC.foto_reverso" style="text-align:center; margin-top:8px;">
+            <!-- Marco fijo -->
+            <div class="mx-auto mt-6 position-relative" :style="{
+              width: esVertical2 ? '3.4cm' : '4.9cm',
+              height: esVertical2 ? '4.9cm' : '3.4cm',
+              border: '1px solid #000',
+              background: '#fff',
+              overflow: 'hidden',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'relative',
+              transition: 'all 0.3s ease',
+            }">
+              <!-- Imagen -->
+              <img :src="`data:image/png;base64,${formDataNFC.foto_reverso}`" :style="{
+                width: '100%',
+                height: '100%',
+                objectFit: estirar2 ? 'fill' : 'contain',
+                transition: 'transform 0.3s ease',
+              }" />
+            </div>
+            <v-row justify="center" class="mt-2 align-center">
+              <v-col cols="auto">
+                <v-checkbox v-model="estirar2" label="Redimensionar imagen." hide-details density="compact" />
+              </v-col>
+
+              <v-col cols="auto">
+                <v-icon color="primary" @click="mostrar = true">mdi-information</v-icon>
+
+                <v-dialog v-model="mostrar" max-width="280">
+                  <v-card class="pa-3 text-center">
+                    <v-card-text>
+                      Su imagen será eliminada después de la entrega del llavero.
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-btn text color="primary" @click="mostrar = false">Entendido</v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
+              </v-col>
+            </v-row>
+          </div>
+
+          <v-number-input v-model="formDataNFC.cantidad" label="Cantidad max. 25" :min="1" :max="25" control-variant="split" :rules="[
+            v => v > 0 || 'Debe ser mayor que 0',
+            v => v <= 25 || 'Máximo permitido: 25'
+          ]" class="mb-6" />
+
+          <v-select v-model="formDataNFC.id_Tipo_Pago" :items="itemsPago" item-title="text" item-value="value"
+            label="Método de pago" :rules="[v => !!v || 'Selecciona un método de pago']" />
+
+          <v-select v-model="formDataNFC.entrega" :items="itemsEntrega" label="Entrega"
+            :rules="[v => !!v || 'Selecciona el tipo de entrega']" />
+
+          <div v-if="formDataNFC.entrega === 'Domicilio'">
+
+            <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre"
+              :rules="[v => !!v || 'El nombre de entrega es obligatorio']"></v-text-field>
+            <v-text-field v-model="formDataNFC.telefono" label="Telefono"
+              :rules="[v => !!v || 'El teléfono de entrega es obligatorio']"></v-text-field>
+            <v-text-field v-model="formDataNFC.direccion_entrega" label="Direccion"
+              :rules="[v => !!v || 'La dirección es obligatoria']"></v-text-field>
+          </div>
+
+          <div v-if="formDataNFC.entrega === 'Interior colegio Mixto Belen'">
+
+            <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre"
+              :rules="[v => !!v || 'El nombre de entrega es obligatorio']"></v-text-field>
+            <v-text-field v-model="formDataNFC.telefono" label="Teléfono" type="text" inputmode="numeric" maxlength="8"
+              counter="8" :rules="[
+                v => !!v || 'El teléfono es obligatorio',
+                v => v.length === 8 || 'Debe tener exactamente 8 dígitos'
+              ]" @input="limitarTelefono" />
+
+          </div>
+
+          <v-btn color="primary" size="small" class="mt-4" @click="validarFormulario">Solicitar</v-btn>
+
         </div>
-
-        <div v-if="formDataNFC.entrega === 'Interior colegio Mixto Belen'">
-
-          <v-text-field v-model="formDataNFC.persona_Entregar" label="Nombre"
-            :rules="[v => !!v || 'El nombre de entrega es obligatorio']"></v-text-field>
-          <v-text-field v-model="formDataNFC.telefono" label="Teléfono" type="text" inputmode="numeric" maxlength="8"
-            counter="8" :rules="[
-              v => !!v || 'El teléfono es obligatorio',
-              v => v.length === 8 || 'Debe tener exactamente 8 dígitos'
-            ]" @input="limitarTelefono" />
-
-        </div>
-
-
-
-
-
-
-        <v-btn color="primary" size="small" class="mt-4" @click="validarFormulario">Solicitar</v-btn>
       </div>
     </v-form>
 
@@ -253,6 +400,9 @@ import { ordenCliente, obtenerOrdenFinalizadas } from "../utils/API_ordenes"
 import CardGrabado from "../components/cardProdFinalizado.vue"
 import { crearCheckout } from "../utils/Pago_recurrenteTC"
 
+import { usePlaca } from '../utils/logicaPlacas'
+
+
 const estirar = ref(false) // <--- nuevo checkbox
 const estirar2 = ref(false) // <--- nuevo checkbox
 import { analizarImagen } from "../utils/ResizeImg"
@@ -314,7 +464,7 @@ let connectionListener = null;
 onMounted(async () => {
   // 👉 Define el listener
   connectionListener = async (payload) => {
-   // console.log("📡 Datos recibidos:", payload);
+    // console.log("📡 Datos recibidos:", payload);
 
     if (itemSelect.value === "dashboard") {
       ordenes.value = await ordenCliente(usuario.value.usuarioId);
@@ -340,7 +490,7 @@ onUnmounted(() => {
   try {
     if (connection?.off && connectionListener) {
       connection.off("RecibirSaludo", connectionListener);
-     // console.log("🧹 Listener eliminado correctamente");
+      // console.log("🧹 Listener eliminado correctamente");
     }
   } catch (err) {
     console.warn("⚠️ No se pudo eliminar el listener SignalR:", err);
@@ -391,7 +541,7 @@ onMounted(() => {
       dialogMessage.value = ""
       // Envía el mensaje al padre (el componente principal con el modal)
       window.parent.postMessage({ estado }, "*");
-     // console.log("📤 Mensaje enviado al padre con estado:", estado);
+      // console.log("📤 Mensaje enviado al padre con estado:", estado);
 
       loadingEvento.value = false
       dialogState.value = "error";
@@ -409,7 +559,7 @@ onMounted(() => {
       dialogMessage.value = ""
       // Envía el mensaje al padre (el componente principal con el modal)
       window.parent.postMessage({ estado }, "*");
-     // console.log("📤 Mensaje enviado al padre con estado:", estado);
+      // console.log("📤 Mensaje enviado al padre con estado:", estado);
 
       loadingEvento.value = false
       dialogState.value = "success";
@@ -445,6 +595,7 @@ function esURLValida(valor) {
 //Formulario de NFC
 const formDataNFC = ref({
   id_Usuario: 0,
+  tipo_llavero: "Selecione una opción",
   id_Tipo_Pago: "Seleccione Metodo pago",
   fecha: getFechaActual(), // siempre formato YYYY-MM-DD
   total: 10,
@@ -454,13 +605,12 @@ const formDataNFC = ref({
   estado: 1,
   entrega_domicilio: false,
 
-
   detalles: JSON.stringify([
     {
       id_articulo: 1,
       cantidad: 1,
-      precio: 50,
-      subtotal: 50,
+      precio: 10,
+      subtotal: 10,
       foto_anverso: null,
       foto_reverso: null,
       link: "",
@@ -474,9 +624,58 @@ const formDataNFC = ref({
 
 })
 
+
+const {
+  archivo,
+  archivo2,
+
+  imagenFinal1,
+  modo1,
+  modo2,
+  placa,
+  generarImagenConTexto,
+  validarPlaca,
+  formatearPlaca,
+} = usePlaca(formDataNFC, esVertical, esVertical2)
+
 watch(() => formDataNFC.value.entrega, (nuevoValor) => {
   formDataNFC.value.entrega_domicilio = (nuevoValor === 'Domicilio' || nuevoValor === 'Interior colegio Mixto Belen')
 })
+
+watch(
+  () => formDataNFC.value.tipo_llavero,
+  (nuevoValor) => {
+    // Cambia automáticamente el tipo de grabado según el llavero seleccionado
+    if (nuevoValor === 1) {
+      formDataNFC.value.id_tipo_grabado = 1
+      console.log("id grabar ", formDataNFC.value.id_tipo_grabado)
+    } else if (nuevoValor === 2) {
+      formDataNFC.value.id_tipo_grabado = 2
+      console.log("id grabar ", formDataNFC.value.id_tipo_grabado)
+    } else {
+      formDataNFC.value.id_tipo_grabado = 1 // Por defecto URL
+      console.log("id grabar ", formDataNFC.value.id_tipo_grabado)
+    }
+  }
+)
+
+watch(
+  () => modo1.value, // lo que observamos
+  (nuevo, anterior) => {
+    console.log('🔄 id_tipo_grabado cambió de', anterior, 'a', nuevo)
+    archivo.value = null
+    formDataNFC.value.foto_anverso = null
+  }
+)
+
+watch(
+  () => modo2.value, // lo que observamos
+  (nuevo, anterior) => {
+    console.log('🔄 id_tipo_grabado cambió de', anterior, 'a', nuevo)
+    archivo.value = null
+    formDataNFC.value.foto_reverso = null
+  }
+)
 
 
 function getFechaActual() {
@@ -540,9 +739,9 @@ const guardarNFC = async () => {
       entrega_domicilio: formDataNFC.value.entrega_domicilio ? 1 : 0,
       detalles: JSON.stringify([{
         id_articulo: 1,
-        cantidad: 1,
+        cantidad: formDataNFC.value.cantidad,
         precio: 10,
-        subtotal: 10,
+        subtotal: formDataNFC.value.cantidad * 10,
         foto_anverso: formDataNFC.value.foto_anverso,
         foto_reverso: formDataNFC.value.foto_reverso,
         texto: "No valido",
@@ -555,7 +754,7 @@ const guardarNFC = async () => {
       }])
     }
 
-   // console.log("Datos de la orden a enviar ", orden)
+    console.log("Datos de la orden a enviar ", orden)
 
 
     const response = await fetch(UrlWithApiRD(ENDPOINTS.crearOrden), {
@@ -565,7 +764,7 @@ const guardarNFC = async () => {
     })
 
     const data = await response.json()
-   // console.log("Respuesta API:", data)
+    // console.log("Respuesta API:", data)
 
     if (data.success) {
       loadingEvento.value = false
@@ -595,7 +794,7 @@ const guardarNFC = async () => {
     }
 
 
-   // console.log("Datos de form", formDataNFC.value)
+    // console.log("Datos de form", formDataNFC.value)
     //console.log("Datos de form2", orden)
     formDataNFC.value.fotografia = previewPhoto.value
 
@@ -604,6 +803,7 @@ const guardarNFC = async () => {
     formDataNFC.value = {
 
       id_Usuario: 0,
+      tipo_llavero: "Selecione una opción",
       id_Tipo_Pago: 0,
       fecha: getFechaActual(), // siempre formato YYYY-MM-DD
       total: 10,
@@ -823,8 +1023,8 @@ const opcionFoto2 = ref(null)
 
 const itemsPago = [
   // { text: 'Tarjeta Q 15.00', value: 1 }, // <-- comentario válido aquí
-  { text: 'Efectivo Q 10.00', value: 2 },
-  { text: 'Transferencia Q 10.00', value: 3 }
+  { text: 'Efectivo Q 10.00 c/u', value: 2 },
+  { text: 'Transferencia Q 10.00 c/u', value: 3 }
 ];
 
 const itemsEntrega = [
