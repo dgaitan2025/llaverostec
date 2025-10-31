@@ -13,7 +13,8 @@
     <!-- Formulario NFC -->
     <div v-if="mostrarFormulario" class="pa-6 text-center">
 
-
+      <v-text-field v-model="formDataNFC.id_orden" label="Orden atendiendo" type="url" disabled />
+      <v-text-field v-model="formDataNFC.cantidad" label="Cantidad de llaveros" type="url" disabled />
       <v-select class="mt-4" v-model="formDataNFC.id_tipo_grabado" :items="[
         { text: 'URL', value: 1 },
         { text: 'Contacto', value: 2 }
@@ -385,6 +386,7 @@ const acciones = [
         domicilio: 0,
         fill1: 0,
         fill2: 0,
+        cantidad:0,
       };
       mostrarFormulario.value = false
       dialogEvento.value = true
@@ -483,6 +485,7 @@ const formDataNFC = ref({
   domicilio: 0,
   fill1: 0,
   fill2: 0,
+  cantidad:0,
 
 })
 
@@ -576,12 +579,6 @@ const handleMenuClick = async (item) => {
     const resultado2 = await analizarBase64(formDataNFC.value.foto_reverso)
     esVertical2.value = resultado2.esVertical
 
-    console.log("es vertical", resultado)
-
-    console.log("orden foto anverso", formDataNFC.value.foto_anverso)
-
-
-    console.log("Fase actual", formDataNFC.value.fase_actual)
     if (formDataNFC.value.fase_actual === 3) {
       await avanzarFaseOrden(formDataNFC.value.id_Detalle);
       console.log("Fase actual", formDataNFC.value.fase_actual)

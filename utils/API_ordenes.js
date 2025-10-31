@@ -22,6 +22,7 @@ export async function obtenerOrdenPendiente(operadorId) {
 
     // ✅ Si llega aquí, la respuesta es correcta (HTTP 200)
     const datosReducidos = {
+
       tipoNFC: data.tipo_Grabado,
       textUrl: data.link,
       link: data.link,
@@ -36,11 +37,13 @@ export async function obtenerOrdenPendiente(operadorId) {
       domicilio: data.entrega_domicilio,
       fill1: data.fill1,
       fill2: data.fill2,
+      cantidad: data.cantidad,
+      
     }
 
     //localStorage.setItem("ordenPendiente", JSON.stringify(datosReducidos))
 
-   // console.log("✅ Orden pendiente:", data)
+   console.log("✅ Orden pendiente:", data)
     return datosReducidos
 
   } catch (error) {

@@ -6,8 +6,8 @@ export function usePlaca(formDataNFC, esVertical, esVertical2) {
     const archivo2 = ref(null)
 
     const imagenFinal1 = ref(null)
-    const modo1 = ref('Seleccione foto')
-    const modo2 = ref('Escribir placa')
+    const modo1 = ref('Seleccione foto 1')
+    const modo2 = ref('Seleccione foto 2')
     const placa = ref('')
 
     const generarImagenConTexto = async () => {
