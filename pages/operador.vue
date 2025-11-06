@@ -11,7 +11,7 @@
     </div>
 
     <!-- Formulario NFC -->
-    <div v-if="mostrarFormulario" class="pa-6 text-center">
+    <div v-if="mostrarFormulario" class="pa-6 mx-auto text-center" style="max-width: 600px;">
 
       <v-text-field v-model="formDataNFC.id_orden" label="Orden atendiendo" type="url" disabled />
       <v-text-field v-model="formDataNFC.cantidad" label="Cantidad de llaveros" type="url" disabled />
@@ -80,24 +80,25 @@
           alignItems: 'center',
           position: 'relative',
           transition: 'all 0.3s ease',
-          }">
+        }">
           <!-- Imagen -->
-          
-            <img :src="`data:image/png;base64,${formDataNFC.foto_reverso}`" :style="{
-              width: '100%',
-              height: '100%',
-              objectFit: formDataNFC.fill2 ? 'fill' : 'contain',
-              transition: 'transform 0.3s ease',
-            }" />
-          
+
+          <img :src="`data:image/png;base64,${formDataNFC.foto_reverso}`" :style="{
+            width: '100%',
+            height: '100%',
+            objectFit: formDataNFC.fill2 ? 'fill' : 'contain',
+            transition: 'transform 0.3s ease',
+          }" />
+
         </div>
 
       </div>
-      
+
 
       <BotonSecuencial :acciones="acciones" :fase-actual="formDataNFC?.fase_actual" />
 
-        
+      
+
 
     </div>
   </Sidebar>
@@ -386,7 +387,7 @@ const acciones = [
         domicilio: 0,
         fill1: 0,
         fill2: 0,
-        cantidad:0,
+        cantidad: 0,
       };
       mostrarFormulario.value = false
       dialogEvento.value = true
@@ -485,7 +486,7 @@ const formDataNFC = ref({
   domicilio: 0,
   fill1: 0,
   fill2: 0,
-  cantidad:0,
+  cantidad: 0,
 
 })
 
